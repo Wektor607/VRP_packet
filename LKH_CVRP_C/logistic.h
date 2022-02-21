@@ -462,7 +462,7 @@ double sa(town *sub, int lenSub, halfmatrix *m) {
 	double best = subtourdistance(subcopy, lenSub, m), newd, p;
 	double runtime = clock(); 
 	int T = tmax;
-	for(int k = 0; T >= tmin && clock() - runtime < 600000000; k++, T = T * 0.1 / k) {
+	for(int k = 0; T >= tmin && clock() - runtime < 600000000; T = T / (k + 1), k++) {
 		GenerateStateCandidate(subcopy, sub, lenSub);
 		newd = subtourdistance(subcopy, lenSub, m);
 		if(newd < best) {

@@ -25,14 +25,20 @@ int main()
 	{
 		readOneTownByBinary(towns, &m, "test", i);
 
-
-		int maxCapacity = -1;
+		int max_vehicle_car = 30;
+		int maxCapacity = 0;
 		for(int c = 0; c < countTowns; c++) {
 			if(towns[c].weight > maxCapacity) {
 				maxCapacity = towns[c].weight;
 			}
 		}
-		maxCapacity *= 10;
+		int count = 1;
+		while(maxCapacity > max_vehicle_car)
+		{
+			max_vehicle_car = max_vehicle_car / count;
+			count++;
+			max_vehicle_car *= count;
+		}
 	
 		printtownmatrix(&m);
 
@@ -52,7 +58,7 @@ int main()
 		temp[0] = towns[0];
 		
 		double distanceInTourBest = -1.0, distanceInTourNew = 0.0, noneOptimalDistance = 0.0;
-		printf("%d\n", getTownByName(16, countTowns - 1, sub).weight);
+		// printf("%d\n", getTownByName(16, countTowns - 1, sub).weight);
 		double runtime = clock();
 		for(int i = 0; i < countTasks;i++)
 		{
@@ -63,7 +69,7 @@ int main()
 			int cap = 0, l = 0;
 			for(int g = 0; g < countTowns - 1; g++) {
 				
-				if(cap + sub[g].weight <= maxCapacity) {
+				if(cap + sub[g].weight <= max_vehicle_car) {
 					temp[l] = sub[g];
 					l++;
 					cap += sub[g].weight;
