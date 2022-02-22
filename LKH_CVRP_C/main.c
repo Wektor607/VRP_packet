@@ -25,21 +25,8 @@ int main()
 	{
 		readOneTownByBinary(towns, &m, "test", i);
 
-		int max_vehicle_car = 30;
-		int maxCapacity = 0;
-		for(int c = 0; c < countTowns; c++) {
-			if(towns[c].weight > maxCapacity) {
-				maxCapacity = towns[c].weight;
-			}
-		}
-		int count = 1;
-		while(maxCapacity > max_vehicle_car)
-		{
-			max_vehicle_car = max_vehicle_car / count;
-			count++;
-			max_vehicle_car *= count;
-		}
-	
+		int maxCapacity = MaxCapacity;
+		
 		printtownmatrix(&m);
 
 		town sub[countTowns - 1]; // города
@@ -47,7 +34,6 @@ int main()
 		{
 			sub[i-1] = getTownByName(i, countTowns, towns);
 		}
-
 
 		for(int i = 0; i < countTowns - 1; i++) {
 			printf("%d ", sub[i].name);
@@ -60,6 +46,7 @@ int main()
 		double distanceInTourBest = -1.0, distanceInTourNew = 0.0, noneOptimalDistance = 0.0;
 		// printf("%d\n", getTownByName(16, countTowns - 1, sub).weight);
 		double runtime = clock();
+		FILE* task_file = fopen("LKH_task.txt", "w");
 		for(int i = 0; i < countTasks;i++)
 		{
 
@@ -69,7 +56,7 @@ int main()
 			int cap = 0, l = 0;
 			for(int g = 0; g < countTowns - 1; g++) {
 				
-				if(cap + sub[g].weight <= max_vehicle_car) {
+				if(cap + sub[g].weight <= maxCapacity) {
 					temp[l] = sub[g];
 					l++;
 					cap += sub[g].weight;

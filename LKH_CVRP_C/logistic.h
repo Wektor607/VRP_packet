@@ -349,8 +349,8 @@ double lkh3opt(town *sub, int lenSub, halfmatrix *m)
 	double runtime = clock(); 
 	for(int i = 0; ALGFOR(i); i++)
 	{
-		mode = rand() % 7;
-		// mode = 6;
+		// mode = rand() % 7;
+		// // mode = 6;
 		a0 = rand() % (lenSub - 1);
 		b0 = rand() % (lenSub - 1);
 		
@@ -360,60 +360,44 @@ double lkh3opt(town *sub, int lenSub, halfmatrix *m)
 
 		a = my_min(a0, b0);
 		b = my_max(a0, b0);
+		for(mode = 0; mode < 7; mode++)
+		{
+			switch(mode){
+				case(0): {reverseTown(subcopy, 0, a);break;}
+				case(1): {reverseTown(subcopy, a+1, b);break;}
+				case(2): {reverseTown(subcopy, b+1, lenSub-1);break;}
+				case(3): {moveElems(subcopy, a+1, b, b+1,lenSub-1);break;}
+				// case 4, 5, 6 - crash program: Segmentation Fault
+				case(4): {
+					
+					reverseTown(subcopy, 0, a);
+					moveElems(subcopy, a+1, b, b+1,lenSub-1);
+					
+					break;
+				}
+				case(5): {
+					
+					reverseTown(subcopy, a+1, b);
+					moveElems(subcopy, a+1, b, b+1,lenSub-1);
+				
+					break;
+				}
+				case(6): {
 
-		switch(mode){
-			case(0): {reverseTown(subcopy, 0, a);break;}
-			case(1): {reverseTown(subcopy, a+1, b);break;}
-			case(2): {reverseTown(subcopy, b+1, lenSub-1);break;}
-			case(3): {moveElems(subcopy, a+1, b, b+1,lenSub-1);break;}
-			// case 4, 5, 6 - crash program: Segmentation Fault
-			case(4): {
-				
-				reverseTown(subcopy, 0, a);
-				moveElems(subcopy, a+1, b, b+1,lenSub-1);
-				
-				break;
+					reverseTown(subcopy, b+1, lenSub-1);
+					moveElems(subcopy, a+1, b, b+1,lenSub-1);
+
+					break;
+				}
 			}
-			case(5): {
-				
-				reverseTown(subcopy, a+1, b);
-				moveElems(subcopy, a+1, b, b+1,lenSub-1);
-			
-				break;
-			}
-			case(6): {
-				// printf("BEFOR_REVERSE: ");
-				// for(int i = 0; i < lenSub; i++)
-				// {
-				// 	printf("%d, ", subcopy[i].name);
-				// }
-				// putchar('\n');
-				// printf("a:%d\n", a);
-				// printf("b:%d\n", b);
-				reverseTown(subcopy, b+1, lenSub-1);
-				// printf("AFTER_REVERSE: ");
-				// for(int i = 0; i < lenSub; i++)
-				// {
-				// 	printf("%d, ", subcopy[i].name);
-				// }
-				// putchar('\n');
-				moveElems(subcopy, a+1, b, b+1,lenSub-1);
-				// printf("AFTER_MOVE: ");
-				// for(int i = 0; i < lenSub; i++)
-				// {
-				// 	printf("%d, ", subcopy[i].name);
-				// }
-				// putchar('\n');
-				break;
-			}
-		}
-		newd = subtourdistance(subcopy, lenSub, m);
-		if(newd < best) {
-			best = newd;
-			//цикл копирования subcopy -> sub
-			for(int j = 0; j < lenSub; j++)
-			{
-				sub[j] = subcopy[j];
+			newd = subtourdistance(subcopy, lenSub, m);
+			if(newd < best) {
+				best = newd;
+				//цикл копирования subcopy -> sub
+				for(int j = 0; j < lenSub; j++)
+				{
+					sub[j] = subcopy[j];
+				}
 			}
 		}
 		
@@ -462,7 +446,7 @@ double sa(town *sub, int lenSub, halfmatrix *m) {
 	double best = subtourdistance(subcopy, lenSub, m), newd, p;
 	double runtime = clock(); 
 	int T = tmax;
-	for(int k = 0; T >= tmin && clock() - runtime < 600000000; T = T / (k + 1), k++) {
+	for(int k = 0; T >= tmin && clock() - runtime < 6000000000000000000; T = T / (k + 1), k++) {
 		GenerateStateCandidate(subcopy, sub, lenSub);
 		newd = subtourdistance(subcopy, lenSub, m);
 		if(newd < best) {
@@ -472,7 +456,7 @@ double sa(town *sub, int lenSub, halfmatrix *m) {
 				sub[i] = subcopy[i];
 			}
 		} else {
-			p = exp((best - newd) / T);
+			p = exp(-(best - newd) / T);
 			if(p > (rand() % 10000 / 10000.0)) 
 			{
 				best = newd;
