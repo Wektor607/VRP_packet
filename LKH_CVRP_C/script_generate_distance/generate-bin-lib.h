@@ -31,26 +31,15 @@ void parseOneTown(const char pathFile[], const char newFileName[], int index)
 	read_file(pathFile, towns, countTownsBin);
 
 	printTownList(countTownsBin, towns);
-	//printtown(getTownByName(0, countTownsBin, towns));
-	//printtown(getTownByName(1, countTownsBin, towns));
-	//printAllMap(countTownsBin, towns);
 
-	int maxCapacity = -1;
-	
-	for(int c = 0; c < countTownsBin; c++) {
-		if(towns[c].weight > maxCapacity) {
-			maxCapacity = towns[c].weight;
-		}
-	}
-	maxCapacity *= 4;
+	int maxCapacity = MaxCapacity;
 
 	for(int i = 0; i < countTownsBin; i++)
 	{
 		for(int j = 0; j < countTownsBin-i-1; j++)
 		{
-			//printf("t%d %d t%d %lf\n", i, j, m.width-j, getDistance(towns[i], towns[m.width-j]));
-			//m.data[i][j] = getDistance(towns[j], towns[i]);
-			if(getTownByName(i, countTownsBin, towns).weight + getTownByName(m.width-j, countTownsBin, towns).weight > maxCapacity) {
+			if(getTownByName(i, countTownsBin, towns).weight + getTownByName(m.width-j, countTownsBin, towns).weight > maxCapacity) 
+			{
 				pointAthalfmatrix(&m, i, j, -1.0);
 				continue;
 			}
