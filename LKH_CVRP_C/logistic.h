@@ -18,6 +18,7 @@ typedef struct town {
 } town;
 
 #define errortown maketown(-1, -1, -1, -1);
+#define zerotown maketown(-3, 0, 0, 3000);
 
 town maketown(int name, double x, double y, int weight)
 {
@@ -84,6 +85,7 @@ int read_file(const char* name_file, town *towns, int counttowns)
     in = fopen(name_file, "r");
     if(in == NULL)
     {
+        //printf("11 Error %d \n", errno);
         return -1;
     }
     int symbol;
@@ -96,7 +98,7 @@ int read_file(const char* name_file, town *towns, int counttowns)
         fscanf(in, "%lf\t%lf\t%lf\n", &x, &y, &cap);
         towns[i] = maketown(i, x, y, cap);
     }
-
+    //fscanf(in, "%lf\t%lf\t\n", &depot[0], &depot[1]);
     fclose(in);
     return 0;
 }
@@ -138,6 +140,7 @@ double getDistance(const town town1, const town town2)
 		}
 	}
 	double result = strtod(num, &eptr);
+	//printf("%lf\n", result);
 	pclose(fp);	
 	return result;
 }
@@ -194,14 +197,27 @@ void printTownList(int counttown, town *towns)
 
 double subtourdistance(town *sub, int lenSub, halfmatrix* m)
 {
+	// 1 2 3 4 #4
+	// 01 12 23 34 40 #5
+	//printTownList(lenSub, sub);
 	if(lenSub == 0) {
 		return 0;
 	}
-
+	//printf("lenSub: %d\n", lenSub);
+	//printf("all sub: [");
+	/*
+	for(int i = 0; i < lenSub; i++) {
+		printf("%d ", sub[i].name);
+	}
+	printf("]\n");
+	printf("sub[lenSub-1].name: %d\n", sub[lenSub-1].name);*/
 	double r = getByTown(m, 0, sub[0].name) + getByTown(m, 0, sub[lenSub-1].name);
+	//printf("@%lf %lf\n", getByTown(m, 0, sub[0].name), getByTown(m, 0, sub[lenSub-1].name));
 
 	for(int i = 0; i < lenSub-1; i++)
 	{
+		//printf("@%lf\n", getByTown(m, sub[i].name, sub[i+1].name));
+		//printf("sub[i+1].name: %d\n", sub[i+1].name);
 		r += getByTown(m, sub[i].name, sub[i+1].name);
 	}
 	return r;
@@ -226,6 +242,9 @@ void reverseTown(town *sub, int i, int j)
 int moveElems(town *sub, int start1, int end1, int start2, int end2)
 {
 	int difference = (end1 - start1 - (end2 - start2));
+	// 0 1 2 3 4 5 6 7 8 9 10
+	//[0 1 2 3]4 5 6[7 8 9]10
+	//difference = 3 - 0 - (9 - 7) = 1
 
 	town tmp;
 
@@ -236,42 +255,63 @@ int moveElems(town *sub, int start1, int end1, int start2, int end2)
 	for(int i = 0; i < abs(difference); i++) {
 		if(difference > 0) {
 			mtmp[i] = sub[end1 + 1 - difference + i];
+			//printf("%d ", mtmp[i].name);
 		} else if(difference < 0) {
 			mtmp[i] = sub[start2 + i];
 		}
 	}
-
+	//putchar('\n');
 	if(difference > 0) {
-		for(int i = 0; i < end2 - end1; i++) {
+		//0[1 2 3 4]5 6 7[8 9]10
+		//0[1 2 3 4 5]6[7]8 9 10
+		//printTownList(11, sub);
+		for(int i = 0; i < end2 - end1; i++) { //start2 + start1 - (end1 - start1 - (end2 - start2)) = 2*start2 + 2 *start1 - end1 - end2
 			sub[end1 + 1 - difference + i] = sub[end1 + 1 + i];
 		}
-
+		//0[1 2 5 6]7 8 9[* *]10
+		//0[1 6 7 * *]*[*]8 9 10
+		//printTownList(11, sub);
 		for(int i = 0; i < end2 - start2 + 1; i++) {
 			tmp = sub[start1 + i];
 			sub[start1 + i] = sub[start2 + i - difference];
 			sub[start2 + i - difference] = tmp;
 		}
-
+		//printTownList(11, sub);
+		//0[8 9 5 6]7 1 2[* *]10
 		for(int i = 0; i < abs(difference); i++) {
 			sub[end2 + 1 - difference +i] = mtmp[i];
 		}
+		//printTownList(11, sub);
+		//0[8 9 5 6]7 1 2[3 4]10
+		//0{8 9}5 6 7{1 2 3 4}10
+		//printTownList(11, sub);
 
 	} else if(difference < 0) {
-
+		//[0 1 2]3 4[5 6 7 8 9]10
+		//printTownList(11, sub);
 		for(int i = 0; i < end1 - start1 + 1; i++) {
 			tmp = sub[start1 + i];
 			sub[start1 + i] = sub[start2 - difference + i];
 			sub[start2 - difference + i] = tmp;
 		}
+		//printTownList(11, sub);
+		//[7 8 9]3 4[5 6 0 1 2]10
 
 		for(int i = 0; i < start2-start1; i++) {
 			sub[start2 - difference - 1 - i] = sub[start2 - 1 - i];
 		}
+		//[* * 7]8 9[3 4 0 1 2]10
+		//printTownList(11, sub);
 		for(int i = 0; i < abs(difference); i++) {
 			sub[start1 + i] = mtmp[i];
 		}
+		//{5 6 7 8 9}3 4{0 1 2}10
+		//printTownList(11, sub);
 	}
 
+	//[7 8 9 3]4 5 6[0 1 2]10
+
+	//[7 8 9 4]5 6 0[1 2 3]10
 	free(mtmp);
 	return 0;
 }
@@ -292,22 +332,29 @@ double lkh2opt(town *sub, int lenSub, halfmatrix* m)
 	printf("Old distance: %lf\n", best);
 	printf("Old list: "); printTownList(lenSub, subcopy);
 	//Основной цикл lkh
-	double runtime = clock(); \
-	for(int i = 0; ALGFOR(i); i++)
+	double runtime = clock(); 
+	for(int a = 0; a < lenSub; a++)
 	{
-		a = rand() % lenSub;
-		b = rand() % lenSub;
-		while(a == b) {
-			b = rand() % lenSub;
-		}
-		reverseTown(subcopy, my_min(a, b), my_max(a, b));
-		newd = subtourdistance(subcopy, lenSub, m);
-		if(newd < best) {
-			best = newd;
-			//цикл копирования subcopy -> sub
-			for(int j = 0; j < lenSub; j++)
+		for(int b = a + 1; b < lenSub; b++)
+		{
+		
+			reverseTown(subcopy, my_min(a, b), my_max(a, b));
+			newd = subtourdistance(subcopy, lenSub, m);
+			if(newd < best) 
 			{
-				sub[j] = subcopy[j];
+				best = newd;
+				//цикл копирования subcopy -> sub
+				for(int j = 0; j < lenSub; j++)
+				{
+					sub[j] = subcopy[j];
+				}
+			}
+			else
+			{
+				for(int j = 0; j < lenSub; j++)
+				{
+					subcopy[j] = sub[j];
+				}
 			}
 		}
 	}
@@ -347,60 +394,54 @@ double lkh3opt(town *sub, int lenSub, halfmatrix *m)
 	int a0, b0, a, b, mode;
 
 	double runtime = clock(); 
-	for(int i = 0; ALGFOR(i); i++)
+	for(int a = 0; a < lenSub; a++) 
 	{
-		// mode = rand() % 7;
-		// // mode = 6;
-		a0 = rand() % (lenSub - 1);
-		b0 = rand() % (lenSub - 1);
-		
-		while(a0==b0) {
-			b0 = rand() % (lenSub - 1);
-		}
-
-		a = my_min(a0, b0);
-		b = my_max(a0, b0);
-		for(mode = 0; mode < 7; mode++)
+		for(int b = a + 1; b < lenSub; b++) 
 		{
-			switch(mode){
-				case(0): {reverseTown(subcopy, 0, a);break;}
-				case(1): {reverseTown(subcopy, a+1, b);break;}
-				case(2): {reverseTown(subcopy, b+1, lenSub-1);break;}
-				case(3): {moveElems(subcopy, a+1, b, b+1,lenSub-1);break;}
-				// case 4, 5, 6 - crash program: Segmentation Fault
-				case(4): {
+			for(mode = 0; mode < 7; mode++) 
+			{
+				switch(mode){
+					case(0): {reverseTown(subcopy, 0, a);break;}
+					case(1): {reverseTown(subcopy, a+1, b);break;}
+					case(2): {reverseTown(subcopy, b+1, lenSub-1);break;}
+					case(3): {moveElems(subcopy, a+1, b, b+1,lenSub-1);break;}
+					// case 4, 5, 6 - crash program: Segmentation Fault
+					case(4): {
+						
+						reverseTown(subcopy, 0, a);
+						moveElems(subcopy, a+1, b, b+1,lenSub-1);
+						
+						break;
+					}
+					case(5): {
+						
+						reverseTown(subcopy, a+1, b);
+						moveElems(subcopy, a+1, b, b+1,lenSub-1);
 					
-					reverseTown(subcopy, 0, a);
-					moveElems(subcopy, a+1, b, b+1,lenSub-1);
-					
-					break;
+						break;
+					}
+					case(6): {
+						reverseTown(subcopy, b+1, lenSub-1);
+						moveElems(subcopy, a+1, b, b+1,lenSub-1);
+						break;
+					}
 				}
-				case(5): {
-					
-					reverseTown(subcopy, a+1, b);
-					moveElems(subcopy, a+1, b, b+1,lenSub-1);
-				
-					break;
-				}
-				case(6): {
-
-					reverseTown(subcopy, b+1, lenSub-1);
-					moveElems(subcopy, a+1, b, b+1,lenSub-1);
-
-					break;
-				}
-			}
-			newd = subtourdistance(subcopy, lenSub, m);
-			if(newd < best) {
-				best = newd;
-				//цикл копирования subcopy -> sub
-				for(int j = 0; j < lenSub; j++)
-				{
-					sub[j] = subcopy[j];
+				newd = subtourdistance(subcopy, lenSub, m);
+				if(newd < best) {
+					best = newd;
+					//цикл копирования subcopy -> sub
+					for(int j = 0; j < lenSub; j++)
+					{
+						sub[j] = subcopy[j];
+					}
+				} else {
+					for(int j = 0; j < lenSub; j++)
+					{
+						subcopy[j] = sub[j];
+					}
 				}
 			}
 		}
-		
 	}
 	free(subcopy);
 
@@ -408,7 +449,6 @@ double lkh3opt(town *sub, int lenSub, halfmatrix *m)
 	printf("New list: "); printTownList(lenSub, sub);
 	return best;
 }
-
 
 void GenerateStateCandidate(town *sub, town *best, int lenSub) 
 {
@@ -446,7 +486,7 @@ double sa(town *sub, int lenSub, halfmatrix *m) {
 	double best = subtourdistance(subcopy, lenSub, m), newd, p;
 	double runtime = clock(); 
 	int T = tmax;
-	for(int k = 0; T >= tmin && clock() - runtime < 6000000000000000000; T = T / (k + 1), k++) {
+	for(int k = 0; T >= tmin && clock() - runtime < 600000000; T = T / (k + 1), k++) {
 		GenerateStateCandidate(subcopy, sub, lenSub);
 		newd = subtourdistance(subcopy, lenSub, m);
 		if(newd < best) {
@@ -456,7 +496,7 @@ double sa(town *sub, int lenSub, halfmatrix *m) {
 				sub[i] = subcopy[i];
 			}
 		} else {
-			p = exp(-(best - newd) / T);
+			p = exp((best - newd) / T);
 			if(p > (rand() % 10000 / 10000.0)) 
 			{
 				best = newd;
@@ -470,3 +510,4 @@ double sa(town *sub, int lenSub, halfmatrix *m) {
 
 	return best;
 }
+
