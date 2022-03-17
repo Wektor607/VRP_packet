@@ -17,8 +17,8 @@ typedef struct town {
 	int weight;
 } town;
 
-#define errortown maketown(-1, -1, -1, -1);
-#define zerotown maketown(-3, 0, 0, 3000);
+#define errortown maketown(-1, -1, -1, -1)
+#define zerotown maketown(-3, 0, 0, 3000)
 
 town maketown(int name, double x, double y, int weight)
 {
@@ -449,7 +449,7 @@ double sa(town *sub, int lenSub, halfmatrix *m) {
 	double best = subtourdistance(subcopy, lenSub, m), newd, p;
 	double runtime = clock(); 
 	int T = tmax;
-	for(int k = 0; T >= tmin && clock() - runtime < 600000000; T = T / (k + 1), k++) {
+	for(int k = 0; T >= tmin && clock() - runtime < 60000000000; T = tmax / (k + 1), k++) {
 		GenerateStateCandidate(subcopy, sub, lenSub);
 		newd = subtourdistance(subcopy, lenSub, m);
 		if(newd < best) {
