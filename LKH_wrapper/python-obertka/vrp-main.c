@@ -1,26 +1,11 @@
 #include <Python.h>
 #include "generate-script/generate-bin-lib.h"
 #include "cvrptw-logistic.c"
+#include "logistic.h"
 
 // Компиляция программы: gcc -I/usr/include/python3.8 -c vrp-main.c -lm -o mac 
 // sudo python3 setup.py install
 // python3
-static PyObject *parseOneTownPy(PyObject *self, PyObject *args) {
-   char *in;
-   char *out;
-   int tcountTown;
-   int maxCapacity;
-
-
-   if (!PyArg_ParseTuple(args, "ssii", &in, &out, &tcountTown, &maxCapacity)) {
-      return NULL;
-   }
-   printf("%d\n", maxCapacity);
-
-
-   parseOneTwTownNoIndex(in, out, tcountTown);
-   return Py_BuildValue("s", "Hello, Python extensions!!");
-}
 
 static PyObject *parseOneTwTownPy(PyObject *self, PyObject *args) {
    char *in;
@@ -33,10 +18,33 @@ static PyObject *parseOneTwTownPy(PyObject *self, PyObject *args) {
    }
    printf("%d\n", maxCapacity);
 
-
    parseOneTwTownNoIndex(in, out, tcountTown);
    return Py_BuildValue("s", "Hello, Python extensions!!");
 }
+
+static PyObject *parseOneTownPy(PyObject *self, PyObject *args) {
+   char *in;
+   char *out;
+   int countTown;
+
+
+   if (!PyArg_ParseTuple(args, "ssi", &in, &out, &countTown)) {
+      return NULL;
+   }
+   printf("%d\n", maxCapacity);
+
+
+   parseOneTownNoIndex(in, out, countTown);
+   return Py_BuildValue("s", "Hello, Python extensions!!");
+}
+
+#define CVRP(algfunc) \
+   srand(time(NULL)); \
+   FILE *out = fopen(fileout, "w");\
+	if(out == NULL) {exit(-1);}\
+   town towns[countTowns]; \
+   halfmatrix m; \
+	for(int i = 0; i < countFilesBin; i++) { readOneTownByBinaryNoIndex(towns, &m, in); for(int c = 0; c < countTowns; c++) { if(towns[c].weight > maxCapacity) { towns[c] = zerotown; printf("c: %d\n", c); } } town *sub = (town*)malloc((countTowns - 1) * sizeof(town)); int w = 0; town t; for(int i = 1; i < countTowns; i++) { t = getTownByName(i, countTowns, towns); if(t.name == -1){ printf("Error town: %d\n", t.name); continue; } sub[w] = t; w++; } int newCountTowns = w; sub = realloc(sub, newCountTowns * sizeof(town)); town temp[countTowns]; temp[0] = towns[0]; double distanceInTourBest = -1.0, distanceInTourNew = 0.0, noneOptimalDistance = 0.0; double runtime = clock(); for(int i = 0; i < countTasks;i++) { doShuffle(newCountTowns, sub); int cap = 0, l = 0; for(int g = 0; g < newCountTowns; g++) { if(cap + sub[g].weight <= maxCapacity) { temp[l] = sub[g]; l++; cap += sub[g].weight; } else { noneOptimalDistance += subtourdistance(temp, l, &m); if(l >= 3) { distanceInTourNew += algfunc(temp, l, &m); } else { distanceInTourNew += subtourdistance(temp, l, &m); } cap = 0; l = 0; g--; } } noneOptimalDistance += subtourdistance(temp, l, &m); if(l >= 3) { distanceInTourNew += algfunc(temp, l, &m); } else { distanceInTourNew += subtourdistance(temp, l, &m); } if(distanceInTourBest == -1.0) { fprintf(out, "%lf\t%lf\n", noneOptimalDistance, 0.0); distanceInTourBest = noneOptimalDistance; } if(distanceInTourNew < distanceInTourBest) { distanceInTourBest = distanceInTourNew; fprintf(out, "%lf\t%lf\n", distanceInTourBest, (clock() - runtime) / CLOCKS_PER_SEC); } distanceInTourNew = 0.0; } fprintf(out, "%lf\t%lf\n", distanceInTourBest, (clock() - runtime) / CLOCKS_PER_SEC); fputc('\n', out); free(sub); } fclose(out); finalizehalfmatrix(&m);
 
 
 #define CVRPTW(algfunc) \
@@ -52,16 +60,15 @@ static PyObject *modelMetaHeuristic(PyObject *self, PyObject *args) {
    char *in, *algname;
    int tcountTown; double maxCapacity;
 
-
    if (!PyArg_ParseTuple(args, "ssid", &algname, &in, &tcountTown, &maxCapacity)) {
       return NULL;
    }
 
    if(strcmp(algname, "cvrp_lkh") == 0) {
-      
+      CVRP(lkh3opt);
    } 
    else if(strcmp(algname, "cvrp_sa") == 0) {
-      
+      CVRP(sa);
    } 
    else if(strcmp(algname, "cvrptw_lkh") == 0) {
       CVRPTW(lkh3optTw);
@@ -69,10 +76,6 @@ static PyObject *modelMetaHeuristic(PyObject *self, PyObject *args) {
    } 
    else if(strcmp(algname, "cvrptw_sa") == 0) {
       CVRPTW(saTw);
-
-
-
-
    } else {
       printf("Error algname: %s\n", algname);
       exit(-1);

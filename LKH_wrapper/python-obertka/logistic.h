@@ -101,6 +101,7 @@ int read_file(const char* name_file, town *towns, int counttowns)
     return 0;
 }
 
+
 double getDistance(const town town1, const town town2)
 {
 	char path[PATH_MAX];
@@ -277,7 +278,6 @@ int moveElems(town *sub, int start1, int end1, int start2, int end2)
 	free(mtmp);
 	return 0;
 }
-
 
 double lkh2opt(town *sub, int lenSub, halfmatrix* m)
 {
