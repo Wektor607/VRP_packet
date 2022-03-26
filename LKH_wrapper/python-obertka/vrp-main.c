@@ -84,25 +84,27 @@ static PyObject *modelMetaHeuristic(PyObject *self, PyObject *args) {
    return Py_BuildValue("s", "Hello, Python extensions!!");
 }
 
-static char helloworld_docs[] =
-   "parseOneTownPy(filename1, filename2, countTowns, maxCapacity): create a bin-file with distance-table and town-list\n"
-   "parseOneTwTownPy(filename1, filename2, countTowns): analog parseOneTownPy, but with time parsing\n"
+static char helloworld_docs1[] = 
+   "parseOneTownPy(filename1, filename2, countTowns, maxCapacity): create a bin-file with distance-table and town-list\n";
+static char helloworld_docs2[] = 
+   "parseOneTwTownPy(filename1, filename2, countTowns): analog parseOneTownPy, but with time parsing\n";
+static char helloworld_docs3[] = 
    "modelMetaHeuristic(algname, filename, countTowns, maxCapacity) - choose your algoritm and enter your bin-file\n";
 
 static PyMethodDef helloworld_funcs[] = {
    {"parseOneTownPy", (PyCFunction)parseOneTownPy,
-      METH_VARARGS, helloworld_docs},
+      METH_VARARGS, helloworld_docs1},
    {"parseOneTwTownPy", (PyCFunction)parseOneTwTownPy,
-      METH_VARARGS, helloworld_docs},
+      METH_VARARGS, helloworld_docs2},
    {"modelMetaHeuristic", (PyCFunction)modelMetaHeuristic,
-      METH_VARARGS, helloworld_docs},
+      METH_VARARGS, helloworld_docs3},
    {NULL}
 };
 
 static struct PyModuleDef cModPyDem =
 {
     PyModuleDef_HEAD_INIT,
-    "cvrp", /* name of module */
+    "VRP", /* name of module */
     "Extension module example!",          /* module documentation, may be NULL */
     -1,          /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
     helloworld_funcs
