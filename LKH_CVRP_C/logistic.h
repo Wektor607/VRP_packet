@@ -7,7 +7,8 @@
 #include "distanceMatrix.h"
 #include "parameters.h"
 #include <limits.h>
-
+#include "json.h"
+#include <assert.h>
 
 #pragma once
 
@@ -85,8 +86,8 @@ int read_file(const char* name_file, town *towns, int counttowns)
     in = fopen(name_file, "r");
     if(in == NULL)
     {
-        return -1;
-    }
+    	printf("Error, readfile: %s\n", name_file);
+        exit(-1);    }
     int symbol;
     for(int i = 0; (symbol = fgetc(in)) != EOF && symbol != '\n'; i++);
 
@@ -138,6 +139,51 @@ double getDistance(const town town1, const town town2)
 	pclose(fp);	
 	return result;
 }
+
+char path[1000];
+char output[2000];
+int getDistanceTriangle(const town town1, const town town2, const town town3, double *d1, double *d2, double *d3) {
+
+    FILE *fp; int status;
+
+    char *req = "curl -s 'http://router.project-osrm.org/route/v1/driving/%lf,%lf;%lf,%lf;%lf,%lf;%lf,%lf?overview=false'";
+    snprintf(output, 200, req, town1.y, town1.x, town2.y, town2.x, town3.y, town3.x, town1.y, town1.x);
+    //printf("%s\n", output);
+    fp = popen(output, "r");
+    if(fp == NULL) {
+        return -2.0;
+    }
+    char *json = (char*)malloc(1000 * sizeof(char));
+    fscanf(fp, "%s", json);
+    //printf("%s\n", json);
+
+    //const char json[] = "{\"a\" : true, \"b\" : [false, null, \"foo\"]}";
+    struct json_value_s* root = json_parse(json, strlen(json));
+    assert(root->type == json_type_object);
+
+    struct json_object_s* object = (struct json_object_s*)root->payload;
+
+    //printf("%lu\n", object->length);
+    struct json_object_element_s* code = object->start;
+    assert(0 == strcmp(((struct json_string_s*)code->value->payload)->string, "Ok"));
+
+    struct json_object_element_s* waypoints = code->next;
+    struct json_object_element_s* routes = waypoints->next;
+    struct json_object_element_s* legs = ((struct json_object_s*)(((((struct json_array_s*)routes->value->payload)->start))->value->payload))->start;
+    struct json_array_s* steps = (struct json_array_s*)legs->value->payload;
+
+    char *eptr;
+    struct json_array_element_s* stepu = steps->start;
+    *d1 = strtod(((struct json_number_s*)(((struct json_object_element_s*)(((struct json_object_s*)stepu->value->payload)->start->next->next))->value->payload))->number, &eptr);
+    stepu = stepu->next;
+    *d2 = strtod(((struct json_number_s*)(((struct json_object_element_s*)(((struct json_object_s*)stepu->value->payload)->start->next->next))->value->payload))->number, &eptr);
+    stepu = stepu->next;
+    *d3 = strtod(((struct json_number_s*)(((struct json_object_element_s*)(((struct json_object_s*)stepu->value->payload)->start->next->next))->value->payload))->number, &eptr);
+    //printf("%lf %lf %lf\n", distance1, distance2, distance3);]
+    free(json);
+    return 0;
+}
+
 
 double getDistanceE(const town town1, const town town2)
 {

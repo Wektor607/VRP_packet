@@ -39,11 +39,11 @@ long long tmax = 1000000000;
 long long tmin = 1;
 
 //parameters-bin
-long long countTowns = 101;
-#define countFilesBin 18
+long long countTowns = 21;
+#define countFilesBin 1
 
-#define pathSavingTowns "bin-towns"
-#define noteFile "test"
+#define pathSavingTowns "/Users/ivandruzkov/project/VRP_packet/LKH_CVRP_C/script_generate_distance/bin-towns"
+#define noteFile "tria"
 
 #define RESET   "\033[0m"
 #define RED     "\033[1;31m"
@@ -54,7 +54,7 @@ long long countTowns = 101;
 
 #define FILESbin \
 	char *mfiles[] = { \
-		"100(20 задач)/20201020_182616.csv", \
+		"/Users/ivandruzkov/project/VRP_packet/LKH_CVRP_C/script_generate_distance/20200925_093755.csv", \
 		"100(20 задач)/20201021_185504.csv", \
 		"100(20 задач)/20201111_223641.csv", \
 		"100(20 задач)/20201118_223519.csv", \
