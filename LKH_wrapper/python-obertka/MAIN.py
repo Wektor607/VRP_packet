@@ -3,11 +3,7 @@ import vrp_c
 from datetime import datetime
 #import helloworld
 # help(vrp_c)
-#print(helloworld.parseOneTownPy("/Users/ivandruzkov/project/LKH0/20(20_задач)/20200925_093755.csv", "ttt/test0", 21, 60))
 
-# cvrp.createBinFile("20(20 задач)/20200925_093755.csv", "/test", 21, 60)
-# cvrp.parseOneTownPy("20(20 задач)/20200925_093755.csv", "ttt_cvrp/test0", 21)
-# cvrp.modelMetaHeuristic("cvrp_lkh", "ttt_cvrp/test0", 21, 30)
 parse_funcs = [vrp_c.parseOneTownPy]
 
 class VRP:
@@ -38,7 +34,11 @@ class CVRP (VRP):
         return [0.0, []]
 
     def lkh(self, name_opt: str = 'lkh3opt') -> [float, list]:
-        pass
+        if(name_opt == 'lkh2opt'):
+            vrp_c.modelMetaHeuristic("cvrptw_lkh_2opt", self.path_folder, self.count_towns, self.capacity)
+        else:
+            vrp_c.modelMetaHeuristic("cvrptw_lkh_3opt", self.path_folder, self.count_towns, self.capacity)
+        return [0.0, []]
 
     def gurobi(self) -> [float, list]:
         pass
@@ -57,18 +57,39 @@ class CVRPTW (CVRP):
         vrp_c.parseOneTwTownPy(self.name_file, self.path_folder, self.count_towns)
 
     def sa(self, T: float = 1000, t_min: float = 10) -> [float, list]:
-        pass
+        vrp_c.modelMetaHeuristic("cvrptw_sa", self.path_folder, self.count_towns, self.capacity)
+        return [0.0, []]
     
     def lkh(self, name_opt: str = 'lkh3opt') -> [float, list]:
-        pass
+        if(name_opt == 'lkh2opt'):
+            vrp_c.modelMetaHeuristic("cvrptw_lkh_2opt", self.path_folder, self.count_towns, self.capacity)
+        else:
+            vrp_c.modelMetaHeuristic("cvrptw_lkh_3opt", self.path_folder, self.count_towns, self.capacity)
+        return [0.0, []]
     
     def gurobi(self) -> [float, list]:
         pass
 
 
 def main():
-    a = CVRP("20(20 задач)/20200925_093755.csv", "ttt_cvrp/test0", 21, 10000, 30)#, 600, 1500)
-    a.sa()
+    # help(vrp_c)
+    # print('What do you want to solve: CVRP or CVRPTW?')
+    # task = input()
+
+    a = CVRPTW("20/20200925_093755.csv", "ttt_cvrp/test0", 21, 10000, 500, 600, 1500)
+    
+    # a.sa()
+    
+    # while(1):
+    #     print("Input lkh2opt or lkh3opt:")
+    #     name_opt = input()
+    #     if(name_opt == 'lkh2opt' or name_opt == 'lkh3opt'):
+    #         break
+    #     else:
+    #         print('Try again!')
+    # a.lkh(name_opt)
+
+    
 
 if __name__ == "__main__":
     main()

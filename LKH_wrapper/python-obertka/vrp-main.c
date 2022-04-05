@@ -64,24 +64,36 @@ static PyObject *modelMetaHeuristic(PyObject *self, PyObject *args) {
       return NULL;
    }
 
-   if(strcmp(algname, "cvrp_lkh") == 0) {
+   if(strcmp(algname, "cvrp_lkh_2opt") == 0) {
+      char fileout[] = "LKH_2opt_CVRP_result.txt";
+      CVRP(lkh2opt);
+   } 
+   else if(strcmp(algname, "cvrp_lkh_3opt") == 0) {
+      char fileout[] = "LKH_3opt_CVRP_result.txt";
       CVRP(lkh3opt);
    } 
    else if(strcmp(algname, "cvrp_sa") == 0) {
+      char fileout[] = "SA_CVRP_result.txt";
       CVRP(sa);
    } 
-   else if(strcmp(algname, "cvrptw_lkh") == 0) {
-      CVRPTW(lkh3optTw);
-      
+   //TODO: lkh2opt для CVRPTW
+   else if(strcmp(algname, "cvrptw_lkh_2opt") == 0) {
+      char fileout[] = "LKH_2opt_CVRPTW_result.txt";
+      CVRPTW(lkh2optTw); 
+   } 
+   else if(strcmp(algname, "cvrptw_lkh_3opt") == 0) {
+      char fileout[] = "LKH_3opt_CVRPTW_result.txt";
+      CVRPTW(lkh3optTw); 
    } 
    else if(strcmp(algname, "cvrptw_sa") == 0) {
+      char fileout[] = "SA_CVRPTW_result.txt";
       CVRPTW(saTw);
    } else {
       printf("Error algname: %s\n", algname);
       exit(-1);
    }
 
-   return Py_BuildValue("s", "Hello, Python extensions!!");
+   return Py_BuildValue("f", "Hello, Python extensions!!");
 }
 
 static char helloworld_docs1[] = 
@@ -110,7 +122,7 @@ static struct PyModuleDef cModPyDem =
     helloworld_funcs
 };
 
-PyMODINIT_FUNC PyInit_cvrp(void)
+PyMODINIT_FUNC PyInit_vrp_c(void)
 {
     return PyModule_Create(&cModPyDem);
 }

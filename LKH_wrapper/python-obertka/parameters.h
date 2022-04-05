@@ -38,11 +38,11 @@ double optimalRadius = 0.37;
 //(timeUpdate < ((clock() - runtime) / CLOCKS_PER_SEC))
 
 long long countTasks = 10000;
-long long countUpdate= 100;
+// long long countUpdate = 100;
 //#define timeUpdate 1500000
 //lkh3optTw
 #define LKH lkh3optTw
-#define fileout "LKH_cvrp_result_20.txt"
+// char fileout[] = "SA_cvrp_result_20.txt";
 int maxCapacity = 30;
 //for sa
 long double tmax = 1000;

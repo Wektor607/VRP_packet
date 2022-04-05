@@ -24,9 +24,7 @@ twtown getTwTownByName(int name, int counttown, const twtown* towns)
     // towns = malloc(counttown * sizeof(twtown));
     for(int i = 0; i < counttown; i++)
     {
-        printf("IF\n");
         if(towns[i].t.name == name) {
-            printf("ЕЕЕЕ\n");
             return towns[i];
         }
     }
@@ -128,80 +126,134 @@ void reverseTownTw(twtown *sub, int i, int j)
 int moveElemsTw(twtown *sub, int start1, int end1, int start2, int end2)
 {
     int difference = (end1 - start1 - (end2 - start2));
-    // 0 1 2 3 4 5 6 7 8 9 10
-    //[0 1 2 3]4 5 6[7 8 9]10
-    //difference = 3 - 0 - (9 - 7) = 1
 
     twtown tmp;
 
     twtown *mtmp = (twtown*)malloc(abs(difference) * sizeof(twtown));
-    if(mtmp == NULL) {
+    if(mtmp == NULL) 
+    {
         return -1;
     }
-    for(int i = 0; i < abs(difference); i++) {
-        if(difference > 0) {
+    for(int i = 0; i < abs(difference); i++) 
+    {
+        if(difference > 0) 
+        {
             mtmp[i] = sub[end1 + 1 - difference + i];
-            //printf("%d ", mtmp[i].name);
-        } else if(difference < 0) {
+        } 
+        else if(difference < 0) 
+        {
             mtmp[i] = sub[start2 + i];
         }
     }
-    //putchar('\n');
-    if(difference > 0) {
-        //0[1 2 3 4]5 6 7[8 9]10
-        //0[1 2 3 4 5]6[7]8 9 10
-        //printTownList(11, sub);
-        for(int i = 0; i < end2 - end1; i++) { //start2 + start1 - (end1 - start1 - (end2 - start2)) = 2*start2 + 2 *start1 - end1 - end2
+
+    if(difference > 0) 
+    {
+
+        for(int i = 0; i < end2 - end1; i++) 
+        {
             sub[end1 + 1 - difference + i] = sub[end1 + 1 + i];
         }
-        //0[1 2 5 6]7 8 9[* *]10
-        //0[1 6 7 * *]*[*]8 9 10
-        //printTownList(11, sub);
-        for(int i = 0; i < end2 - start2 + 1; i++) {
+
+        for(int i = 0; i < end2 - start2 + 1; i++) 
+        {
             tmp = sub[start1 + i];
             sub[start1 + i] = sub[start2 + i - difference];
             sub[start2 + i - difference] = tmp;
         }
-        //printTownList(11, sub);
-        //0[8 9 5 6]7 1 2[* *]10
-        for(int i = 0; i < abs(difference); i++) {
+
+        for(int i = 0; i < abs(difference); i++) 
+        {
             sub[end2 + 1 - difference +i] = mtmp[i];
         }
-        //printTownList(11, sub);
-        //0[8 9 5 6]7 1 2[3 4]10
-        //0{8 9}5 6 7{1 2 3 4}10
-        //printTownList(11, sub);
 
-    } else if(difference < 0) {
-        //[0 1 2]3 4[5 6 7 8 9]10
-        //printTownList(11, sub);
+    } 
+    else if(difference < 0) 
+    {
+
         for(int i = 0; i < end1 - start1 + 1; i++) {
             tmp = sub[start1 + i];
             sub[start1 + i] = sub[start2 - difference + i];
             sub[start2 - difference + i] = tmp;
         }
-        //printTownList(11, sub);
-        //[7 8 9]3 4[5 6 0 1 2]10
 
         for(int i = 0; i < start2-start1; i++) {
             sub[start2 - difference - 1 - i] = sub[start2 - 1 - i];
         }
-        //[* * 7]8 9[3 4 0 1 2]10
-        //printTownList(11, sub);
+
         for(int i = 0; i < abs(difference); i++) {
             sub[start1 + i] = mtmp[i];
         }
-        //{5 6 7 8 9}3 4{0 1 2}10
-        //printTownList(11, sub);
+
     }
 
-    //[7 8 9 3]4 5 6[0 1 2]10
-
-    //[7 8 9 4]5 6 0[1 2 3]10
     free(mtmp);
     return 0;
 }
 
+double lkh2optTw(twtown *sub, int lenSub, halfmatrix *m, double *timer, const double endTime)
+{
+    twtown *subcopy = (twtown*)malloc(lenSub * sizeof(twtown));
+    //цикл копирования sub -> subcopy
+    for(int i = 0; i < lenSub; i++)
+    {
+        subcopy[i] = sub[i];
+    }
+
+    double best = subtourdistanceTw(subcopy, lenSub, m, *timer, endTime), newd;
+    if(best == 0) {
+        return -1;
+    }
+
+    printf("\n--*--\nOld total time: %lf\n", best);
+    printf("Old list: "); printTwTownList(subcopy, lenSub); putchar('\n');
+
+    // double localtimer = *timer;
+
+    double runtime = clock();
+	for(int a = 0; a < lenSub; a++)
+	{
+		for(int b = a + 1; b < lenSub; b++)
+		{
+		
+			reverseTownTw(subcopy, my_min(a, b), my_max(a, b));
+			newd = subtourdistanceTw(subcopy, lenSub, m, *timer, endTime);
+            if(best == -1 && newd != -1) 
+            {
+                best = newd;
+                //цикл копирования subcopy -> sub
+                for(int j = 0; j < lenSub; j++)
+                {
+                    sub[j] = subcopy[j];
+                }
+            }
+
+            if(newd != -1 && newd < best) 
+            {
+                best = newd;
+                //цикл копирования subcopy -> sub
+                for(int j = 0; j < lenSub; j++)
+                {
+                    sub[j] = subcopy[j];
+                }
+            } 
+            else 
+            {
+                for(int j = 0; j < lenSub; j++)
+                {
+                    subcopy[j] = sub[j];
+                }
+            }
+		}
+	}
+    free(subcopy);
+
+	printf("New distance: %lf\n", best);
+	printf("New list: "); printTwTownList(sub, lenSub);
+    if(best != -1) {
+        *timer += best;  
+    }
+	return best;
+}
 
 double lkh3optTw(twtown *sub, int lenSub, halfmatrix *m, double *timer, const double endTime) // timer - is a now time. Global time on the world.
 {
@@ -231,102 +283,70 @@ double lkh3optTw(twtown *sub, int lenSub, halfmatrix *m, double *timer, const do
 
     printf("\n--*--\nOld total time: %lf\n", best);
     printf("Old list: "); printTwTownList(subcopy, lenSub); putchar('\n');
-    // int a0, b0, a, b, 
+
     int mode;
-    double localtimer = *timer;
+    // double localtimer = *timer;
 
     double runtime = clock(); 
-    //for(int i = 0; 0; i++)//ALGFOR(i); i++)
-    //{
-        for(int a = 0; a < lenSub; a++) {
-            for(int b = a + 1; b < lenSub; b++) {
-                /*
-                mode = rand() % 7;
-                // mode = 6;
-                a0 = rand() % (lenSub - 1);
-                b0 = rand() % (lenSub - 1);
-                
-                while(a0==b0) {
-                    b0 = rand() % (lenSub - 1);
-                }
-                a = my_min(a0, b0);
-                b = my_max(a0, b0);
-                */
-                for(mode = 0; mode < 7; mode++) {
-                    switch(mode){
-                        case(0): {reverseTownTw(subcopy, 0, a);break;}
-                        case(1): {reverseTownTw(subcopy, a+1, b);break;}
-                        case(2): {reverseTownTw(subcopy, b+1, lenSub-1);break;}
-                        case(3): {moveElemsTw(subcopy, a+1, b, b+1,lenSub-1);break;}
-                        // case 4, 5, 6 - crash program: Segmentation Fault
-                        case(4): {
-                            
-                            reverseTownTw(subcopy, 0, a);
-                            moveElemsTw(subcopy, a+1, b, b+1,lenSub-1);
-                            
-                            break;
-                        }
-                        case(5): {
-                            
-                            reverseTownTw(subcopy, a+1, b);
-                            moveElemsTw(subcopy, a+1, b, b+1,lenSub-1);
+    for(int a = 0; a < lenSub; a++) 
+    {
+        for(int b = a + 1; b < lenSub; b++) 
+        {
+            for(mode = 0; mode < 7; mode++) 
+            {
+                switch(mode){
+                    case(0): {reverseTownTw(subcopy, 0, a);break;}
+                    case(1): {reverseTownTw(subcopy, a+1, b);break;}
+                    case(2): {reverseTownTw(subcopy, b+1, lenSub-1);break;}
+                    case(3): {moveElemsTw(subcopy, a+1, b, b+1,lenSub-1);break;}
+                    // case 4, 5, 6 - crash program: Segmentation Fault
+                    case(4): {
                         
-                            break;
-                        }
-                        case(6): {
-                            // printf("BEFOR_REVERSE: ");
-                            // for(int i = 0; i < lenSub; i++)
-                            // {
-                            //  printf("%d, ", subcopy[i].name);
-                            // }
-                            // putchar('\n');
-                            // printf("a:%d\n", a);
-                            // printf("b:%d\n", b);
-                            reverseTownTw(subcopy, b+1, lenSub-1);
-                            // printf("AFTER_REVERSE: ");
-                            // for(int i = 0; i < lenSub; i++)
-                            // {
-                            //  printf("%d, ", subcopy[i].name);
-                            // }
-                            // putchar('\n');
-                            moveElemsTw(subcopy, a+1, b, b+1,lenSub-1);
-                            // printf("AFTER_MOVE: ");
-                            // for(int i = 0; i < lenSub; i++)
-                            // {
-                            //  printf("%d, ", subcopy[i].name);
-                            // }
-                            // putchar('\n');
-                            break;
-                        }
+                        reverseTownTw(subcopy, 0, a);
+                        moveElemsTw(subcopy, a+1, b, b+1,lenSub-1);
+                        
+                        break;
                     }
-
-                    newd = subtourdistanceTw(subcopy, lenSub, m, *timer, endTime);
-                    if(best == -1 && newd != -1) {
-                        best = newd;
-                        //цикл копирования subcopy -> sub
-                        for(int j = 0; j < lenSub; j++)
-                        {
-                            sub[j] = subcopy[j];
-                        }
+                    case(5): {
+                        
+                        reverseTownTw(subcopy, a+1, b);
+                        moveElemsTw(subcopy, a+1, b, b+1,lenSub-1);
+                    
+                        break;
                     }
+                    case(6): {
+                        reverseTownTw(subcopy, b+1, lenSub-1);
+                        moveElemsTw(subcopy, a+1, b, b+1,lenSub-1);
+                        break;
+                    }
+                }
 
-                    if(newd != -1 && newd < best) {
-                        best = newd;
-                        //цикл копирования subcopy -> sub
-                        for(int j = 0; j < lenSub; j++)
-                        {
-                            sub[j] = subcopy[j];
-                        }
-                    } else {
-                        for(int j = 0; j < lenSub; j++)
-                        {
-                            subcopy[j] = sub[j];
-                        }
+                newd = subtourdistanceTw(subcopy, lenSub, m, *timer, endTime);
+                if(best == -1 && newd != -1) {
+                    best = newd;
+                    //цикл копирования subcopy -> sub
+                    for(int j = 0; j < lenSub; j++)
+                    {
+                        sub[j] = subcopy[j];
+                    }
+                }
+
+                if(newd != -1 && newd < best) {
+                    best = newd;
+                    //цикл копирования subcopy -> sub
+                    for(int j = 0; j < lenSub; j++)
+                    {
+                        sub[j] = subcopy[j];
+                    }
+                } else {
+                    for(int j = 0; j < lenSub; j++)
+                    {
+                        subcopy[j] = sub[j];
                     }
                 }
             }
         }
-    //}
+    }
     free(subcopy);
     
     printf("New total time: %lf\n", best);
@@ -417,7 +437,7 @@ int read_file_tw(const char* name_file, twtown *towns, int counttowns)
     if(in == NULL)
     {
         //printf("11 Error %d \n", errno);
-        return -1;
+        exit(-1);
     }
     int symbol;
     for(int i = 0; (symbol = fgetc(in)) != EOF && symbol != '\n'; i++);
@@ -683,276 +703,276 @@ void readOneTwTownByBinaryNoIndex(twtown *towns, halfmatrix *m, const char newFi
 }
 
 
-int main()
-{
-    srand(time(NULL));
-    FILE *out = fopen(fileout, "w");
-    twtown towns[21];
-    halfmatrix m;
-    // read_file_tw(towns, 21);
-    // for(int i = 0; i < 21; i++) {
-    //     printtwtown(towns[i]);
-    // }
-    // parseOneTwTown("20200925_093755.csv", "twtowntest", 2);
+// int main()
+// {
+//     srand(time(NULL));
+//     FILE *out = fopen(fileout, "w");
+//     twtown towns[21];
+//     halfmatrix m;
+//     // read_file_tw(towns, 21);
+//     // for(int i = 0; i < 21; i++) {
+//     //     printtwtown(towns[i]);
+//     // }
+//     // parseOneTwTown("20200925_093755.csv", "twtowntest", 2);
 
-    readOneTwTownByBinary(towns, &m, "twtowntest", 2);
-    //printtwtown(towns[0]);
-    twtown town0 = getTwTownByName(0, countTowns, towns);
-    /*
-    В некоторых ситуациях скорее всего "Карета" будет превращаться в "Тыкву"(Работать некоректно) - я думаю при прохождении через 00:00
-    town0.mTimeStart = 18 * 60;
-    town0.mTimeEnd =   12 * 60;
-    */
-    // town0.mTimeStart = 21 * 60;
-    // town0.mTimeEnd =   23 * 60;
-    double timer = town0.mTimeStart;
-    double endTime = town0.mTimeEnd;
+//     readOneTwTownByBinary(towns, &m, "twtowntest", 2);
+//     //printtwtown(towns[0]);
+//     twtown town0 = getTwTownByName(0, countTowns, towns);
+//     /*
+//     В некоторых ситуациях скорее всего "Карета" будет превращаться в "Тыкву"(Работать некоректно) - я думаю при прохождении через 00:00
+//     town0.mTimeStart = 18 * 60;
+//     town0.mTimeEnd =   12 * 60;
+//     */
+//     // town0.mTimeStart = 21 * 60;
+//     // town0.mTimeEnd =   23 * 60;
+//     double timer = town0.mTimeStart;
+//     double endTime = town0.mTimeEnd;
 
-    printTwTownList(towns, 21);
+//     printTwTownList(towns, 21);
 
-    // int arctown0, arctownc;
+//     // int arctown0, arctownc;
 
-    for(int c = 0; c < countTowns; c++) {
+//     for(int c = 0; c < countTowns; c++) {
 
-        // 1 и 11
-        if(town0.mTimeStart < town0.mTimeEnd && town0.mTimeStart > towns[c].mTimeEnd && towns[c].mTimeEnd > towns[c].mTimeStart)
-        {
-            printf("1/11 ");
-            towns[c].t = zerotown;
-            printf("c: %d\n", c);
-        }
+//         // 1 и 11
+//         if(town0.mTimeStart < town0.mTimeEnd && town0.mTimeStart > towns[c].mTimeEnd && towns[c].mTimeEnd > towns[c].mTimeStart)
+//         {
+//             printf("1/11 ");
+//             towns[c].t = zerotown;
+//             printf("c: %d\n", c);
+//         }
 
-        // 12
-        if(town0.mTimeEnd < towns[c].mTimeStart && town0.mTimeStart > towns[c].mTimeEnd && towns[c].mTimeStart > towns[c].mTimeEnd && town0.mTimeEnd > town0.mTimeStart) 
-        {
-            printf("12 ");
-            towns[c].t = zerotown;
-            printf("c: %d\n", c);
-        }
+//         // 12
+//         if(town0.mTimeEnd < towns[c].mTimeStart && town0.mTimeStart > towns[c].mTimeEnd && towns[c].mTimeStart > towns[c].mTimeEnd && town0.mTimeEnd > town0.mTimeStart) 
+//         {
+//             printf("12 ");
+//             towns[c].t = zerotown;
+//             printf("c: %d\n", c);
+//         }
 
-        // 2
-        if(town0.mTimeStart > towns[c].mTimeStart && town0.mTimeStart < towns[c].mTimeEnd && town0.mTimeEnd > towns[c].mTimeEnd)
-        {
-            printf("2 ");
-            towns[c].mTimeStart = town0.mTimeStart;
-        }
+//         // 2
+//         if(town0.mTimeStart > towns[c].mTimeStart && town0.mTimeStart < towns[c].mTimeEnd && town0.mTimeEnd > towns[c].mTimeEnd)
+//         {
+//             printf("2 ");
+//             towns[c].mTimeStart = town0.mTimeStart;
+//         }
 
-        // 3
-        if(town0.mTimeEnd > towns[c].mTimeStart && town0.mTimeStart < towns[c].mTimeEnd && town0.mTimeEnd < town0.mTimeStart)
-        {
-            printf("3 ");
-            continue;
-        }
+//         // 3
+//         if(town0.mTimeEnd > towns[c].mTimeStart && town0.mTimeStart < towns[c].mTimeEnd && town0.mTimeEnd < town0.mTimeStart)
+//         {
+//             printf("3 ");
+//             continue;
+//         }
 
-        // 4
-        if(town0.mTimeStart < towns[c].mTimeStart && town0.mTimeEnd > towns[c].mTimeEnd && towns[c].mTimeEnd < towns[c].mTimeStart && town0.mTimeEnd < town0.mTimeStart)
-        {
-            printf("4 ");
-            continue;
-        }
+//         // 4
+//         if(town0.mTimeStart < towns[c].mTimeStart && town0.mTimeEnd > towns[c].mTimeEnd && towns[c].mTimeEnd < towns[c].mTimeStart && town0.mTimeEnd < town0.mTimeStart)
+//         {
+//             printf("4 ");
+//             continue;
+//         }
 
-        //5
-        if(town0.mTimeStart < towns[c].mTimeEnd && towns[c].mTimeStart > town0.mTimeEnd && towns[c].mTimeStart > towns[c].mTimeEnd)
-        {
-            printf("5 ");
-            continue;
-        }
+//         //5
+//         if(town0.mTimeStart < towns[c].mTimeEnd && towns[c].mTimeStart > town0.mTimeEnd && towns[c].mTimeStart > towns[c].mTimeEnd)
+//         {
+//             printf("5 ");
+//             continue;
+//         }
 
-        //6
-        if(town0.mTimeStart < towns[c].mTimeEnd && towns[c].mTimeStart < town0.mTimeEnd && towns[c].mTimeStart > towns[c].mTimeEnd)
-        {
-            printf("6 ");
-            continue;
-        }
+//         //6
+//         if(town0.mTimeStart < towns[c].mTimeEnd && towns[c].mTimeStart < town0.mTimeEnd && towns[c].mTimeStart > towns[c].mTimeEnd)
+//         {
+//             printf("6 ");
+//             continue;
+//         }
 
-        // 7
-        if (town0.mTimeStart > towns[c].mTimeEnd && town0.mTimeEnd > towns[c].mTimeStart && towns[c].mTimeStart > towns[c].mTimeEnd)
-        {
-            printf("7 ");
-            continue;
-        }
-        // 8
-        if (towns[c].mTimeEnd > towns[c].mTimeStart && town0.mTimeEnd > towns[c].mTimeEnd && town0.mTimeStart > town0.mTimeEnd)
-        {
-            printf("8 ");
-            continue;
-        }
+//         // 7
+//         if (town0.mTimeStart > towns[c].mTimeEnd && town0.mTimeEnd > towns[c].mTimeStart && towns[c].mTimeStart > towns[c].mTimeEnd)
+//         {
+//             printf("7 ");
+//             continue;
+//         }
+//         // 8
+//         if (towns[c].mTimeEnd > towns[c].mTimeStart && town0.mTimeEnd > towns[c].mTimeEnd && town0.mTimeStart > town0.mTimeEnd)
+//         {
+//             printf("8 ");
+//             continue;
+//         }
         
-        // 9
-        if (towns[c].mTimeEnd > towns[c].mTimeStart && towns[c].mTimeStart > town0.mTimeStart && towns[c].mTimeEnd > town0.mTimeEnd)
-        {
-            printf("9 ");
-            continue;
-        }
+//         // 9
+//         if (towns[c].mTimeEnd > towns[c].mTimeStart && towns[c].mTimeStart > town0.mTimeStart && towns[c].mTimeEnd > town0.mTimeEnd)
+//         {
+//             printf("9 ");
+//             continue;
+//         }
 
-        // 9 и 3/4
-        if (towns[c].mTimeEnd > towns[c].mTimeStart && towns[c].mTimeStart < town0.mTimeStart && towns[c].mTimeEnd > town0.mTimeEnd)
-        {
-            printf("9 3/4 ");
-            towns[c].mTimeStart = town0.mTimeStart;
-            towns[c].mTimeEnd = town0.mTimeEnd;
-        }
+//         // 9 и 3/4
+//         if (towns[c].mTimeEnd > towns[c].mTimeStart && towns[c].mTimeStart < town0.mTimeStart && towns[c].mTimeEnd > town0.mTimeEnd)
+//         {
+//             printf("9 3/4 ");
+//             towns[c].mTimeStart = town0.mTimeStart;
+//             towns[c].mTimeEnd = town0.mTimeEnd;
+//         }
         
-        // 10
-        if (towns[c].mTimeStart < town0.mTimeStart && towns[c].mTimeEnd < town0.mTimeEnd && town0.mTimeStart > town0.mTimeEnd)
-        {
-            printf("10 ");
-            towns[c].mTimeStart = town0.mTimeStart;
-        }
+//         // 10
+//         if (towns[c].mTimeStart < town0.mTimeStart && towns[c].mTimeEnd < town0.mTimeEnd && town0.mTimeStart > town0.mTimeEnd)
+//         {
+//             printf("10 ");
+//             towns[c].mTimeStart = town0.mTimeStart;
+//         }
         
-        if(towns[c].t.weight > maxCapacity || (towns[c].mTimeStart - towns[c].mTimeEnd) == 0) {
-            printf("%d", towns[c].t.weight);
-            towns[c].t = zerotown;
-            printf("c: %d\n", c);
-        }
+//         if(towns[c].t.weight > maxCapacity || (towns[c].mTimeStart - towns[c].mTimeEnd) == 0) {
+//             printf("%d", towns[c].t.weight);
+//             towns[c].t = zerotown;
+//             printf("c: %d\n", c);
+//         }
 
-        if(town0.mTimeStart - town0.mTimeEnd == 0)
-        {
-            printf("Impossible to optimize tour");
-            exit(-1);
-        }
-    }
+//         if(town0.mTimeStart - town0.mTimeEnd == 0)
+//         {
+//             printf("Impossible to optimize tour");
+//             exit(-1);
+//         }
+//     }
 
-    printtwtown(towns[1]);
+//     printtwtown(towns[1]);
 
-    twtown *sub = (twtown*)malloc((countTowns - 1) * sizeof(twtown));
-    int w = 0; twtown t;
-    for(int i = 1; i < countTowns; i++)
-    {
-        t = getTwTownByName(i, countTowns, towns);
-        if(t.t.name == -1) {
-            printf("Error town: %d\n", t.t.name);
-            continue;
-        }
-        sub[w] = t;
-        w++;
-    }
+//     twtown *sub = (twtown*)malloc((countTowns - 1) * sizeof(twtown));
+//     int w = 0; twtown t;
+//     for(int i = 1; i < countTowns; i++)
+//     {
+//         t = getTwTownByName(i, countTowns, towns);
+//         if(t.t.name == -1) {
+//             printf("Error town: %d\n", t.t.name);
+//             continue;
+//         }
+//         sub[w] = t;
+//         w++;
+//     }
 
-    int newCountTowns = w;
-    sub = realloc(sub, newCountTowns * sizeof(twtown));
+//     int newCountTowns = w;
+//     sub = realloc(sub, newCountTowns * sizeof(twtown));
 
-    printf("sub: ");
-    for(int i = 0; i < newCountTowns; i++) {
-        printf("%d ", sub[i].t.name);
-    } putchar('\n');
-    printtwtown(sub[1]);
+//     printf("sub: ");
+//     for(int i = 0; i < newCountTowns; i++) {
+//         printf("%d ", sub[i].t.name);
+//     } putchar('\n');
+//     printtwtown(sub[1]);
 
-    twtown temp[countTowns];// координаты |
-    temp[0] = towns[0];
-    double td;
+//     twtown temp[countTowns];// координаты |
+//     temp[0] = towns[0];
+//     double td;
     
-    double distanceInTourBest = -1.0, distanceInTourNew = 0.0, noneOptimalDistance = 0.0;
-    printf("%d\n", getTwTownByName(16, newCountTowns - 1, sub).t.weight);
-    double runtime = clock();
+//     double distanceInTourBest = -1.0, distanceInTourNew = 0.0, noneOptimalDistance = 0.0;
+//     printf("%d\n", getTwTownByName(16, newCountTowns - 1, sub).t.weight);
+//     double runtime = clock();
 
-    double serviseTime = 0;
+//     double serviseTime = 0;
 
-    for(int i = 0; i < newCountTowns; i++) {
-        serviseTime += sub[i].mTimeService;
-    }
-    printf("%lf %d\n", serviseTime, newCountTowns);
-    for(int i = 0; i < countTasks;i++)
-    {
-        int days = 1;
-        doShuffleTw(newCountTowns, sub);
-        //printTownList(newCountTowns, sub);
+//     for(int i = 0; i < newCountTowns; i++) {
+//         serviseTime += sub[i].mTimeService;
+//     }
+//     printf("%lf %d\n", serviseTime, newCountTowns);
+//     for(int i = 0; i < countTasks;i++)
+//     {
+//         int days = 1;
+//         doShuffleTw(newCountTowns, sub);
+//         //printTownList(newCountTowns, sub);
 
-        int cap = 0, l = 0;
-        for(int g = 0; g < newCountTowns; g++) {
+//         int cap = 0, l = 0;
+//         for(int g = 0; g < newCountTowns; g++) {
             
-            if(cap + sub[g].t.weight <= maxCapacity) {
-                temp[l] = sub[g];
-                l++;
-                cap += sub[g].t.weight;
-            } else {
-                noneOptimalDistance += subtourdistanceTw(temp, l, &m, timer, endTime);
-                //printTownList(l, temp);
-                if(l >= 3) {
-                    td = LKH(temp, l, &m, &timer, endTime);
-                    if(td == -1) {
-                        days++;
-                        timer = town0.mTimeStart;
-                        td = LKH(temp, l, &m, &timer, endTime);
-                        if(td == -1) {
-                            printf("Skipping Task.\n");
-                            continue;
-                        }
-                    }
-                    printf("!td: %lf\n", td);
-                    timer += td;
-                    distanceInTourNew += td;
-                } else {
-                    td = subtourdistanceTw(temp, l, &m, timer, endTime);
-                    if(td == -1) {
-                        days++;
-                        timer = town0.mTimeStart;
-                        td = subtourdistanceTw(temp, l, &m, timer, endTime);
-                        if(td == -1) {
-                            printf("Skipping Task.\n");
-                            continue;
-                        }
-                    }
-                    timer += td;
-                    distanceInTourNew += td;
-                }
-                cap = 0;
-                l = 0;
-                g--;
-            }
-        }
-        //printTownList(l, temp);
-        //noneOptimalDistance += subtourdistanceTw(temp, l, &m, timer, endTime);
-        //printTownList(l, temp);
-        if(l >= 3) {
-            td = LKH(temp, l, &m, &timer, endTime);
-            if(td == -1) {
-                days++;
-                timer = town0.mTimeStart;
-                td = LKH(temp, l, &m, &timer, endTime);
-                if(td == -1) {
-                    printf("Skipping Task.\n");
-                    continue;
-                }
-            }
-            printf("!td: %lf\n", td);
-            timer += td;
-            distanceInTourNew += td;
-        } else {
-            td = subtourdistanceTw(temp, l, &m, timer, endTime);
-            if(td == -1) {
-                days++;
-                timer = town0.mTimeStart;
-                td = subtourdistanceTw(temp, l, &m, timer, endTime);
-                if(td == -1) {
-                    printf("Skipping Task.\n");
-                    continue;
-                }
-            }
-            timer += td;
-            distanceInTourNew += td;
-        }
+//             if(cap + sub[g].t.weight <= maxCapacity) {
+//                 temp[l] = sub[g];
+//                 l++;
+//                 cap += sub[g].t.weight;
+//             } else {
+//                 noneOptimalDistance += subtourdistanceTw(temp, l, &m, timer, endTime);
+//                 //printTownList(l, temp);
+//                 if(l >= 3) {
+//                     td = LKH(temp, l, &m, &timer, endTime);
+//                     if(td == -1) {
+//                         days++;
+//                         timer = town0.mTimeStart;
+//                         td = LKH(temp, l, &m, &timer, endTime);
+//                         if(td == -1) {
+//                             printf("Skipping Task.\n");
+//                             continue;
+//                         }
+//                     }
+//                     printf("!td: %lf\n", td);
+//                     timer += td;
+//                     distanceInTourNew += td;
+//                 } else {
+//                     td = subtourdistanceTw(temp, l, &m, timer, endTime);
+//                     if(td == -1) {
+//                         days++;
+//                         timer = town0.mTimeStart;
+//                         td = subtourdistanceTw(temp, l, &m, timer, endTime);
+//                         if(td == -1) {
+//                             printf("Skipping Task.\n");
+//                             continue;
+//                         }
+//                     }
+//                     timer += td;
+//                     distanceInTourNew += td;
+//                 }
+//                 cap = 0;
+//                 l = 0;
+//                 g--;
+//             }
+//         }
+//         //printTownList(l, temp);
+//         //noneOptimalDistance += subtourdistanceTw(temp, l, &m, timer, endTime);
+//         //printTownList(l, temp);
+//         if(l >= 3) {
+//             td = LKH(temp, l, &m, &timer, endTime);
+//             if(td == -1) {
+//                 days++;
+//                 timer = town0.mTimeStart;
+//                 td = LKH(temp, l, &m, &timer, endTime);
+//                 if(td == -1) {
+//                     printf("Skipping Task.\n");
+//                     continue;
+//                 }
+//             }
+//             printf("!td: %lf\n", td);
+//             timer += td;
+//             distanceInTourNew += td;
+//         } else {
+//             td = subtourdistanceTw(temp, l, &m, timer, endTime);
+//             if(td == -1) {
+//                 days++;
+//                 timer = town0.mTimeStart;
+//                 td = subtourdistanceTw(temp, l, &m, timer, endTime);
+//                 if(td == -1) {
+//                     printf("Skipping Task.\n");
+//                     continue;
+//                 }
+//             }
+//             timer += td;
+//             distanceInTourNew += td;
+//         }
 
 
-        if(distanceInTourBest == -1.0) {
-            //printf("I\'m in if\n");
-            fprintf(out, "%lf\t%lf\n", (distanceInTourNew - serviseTime) * kmhToMM, 0.0);//noneOptimalDistance, 0.0);
-            distanceInTourBest = distanceInTourNew;
-        }
+//         if(distanceInTourBest == -1.0) {
+//             //printf("I\'m in if\n");
+//             fprintf(out, "%lf\t%lf\n", (distanceInTourNew - serviseTime) * kmhToMM, 0.0);//noneOptimalDistance, 0.0);
+//             distanceInTourBest = distanceInTourNew;
+//         }
 
 
-        if(distanceInTourNew < distanceInTourBest) {
-            distanceInTourBest = distanceInTourNew;
-            fprintf(out, "%lf\t%lf\n", (distanceInTourBest - serviseTime) * kmhToMM, (clock() - runtime) / CLOCKS_PER_SEC);
-        }
-        distanceInTourNew = 0.0;
-        printf("All days: %d\n", days);
-    }
-    fprintf(out, "%lf\t%lf\n", (distanceInTourBest - serviseTime) * kmhToMM, (clock() - runtime) / CLOCKS_PER_SEC);
-    fputc('\n', out);
-    free(sub);
+//         if(distanceInTourNew < distanceInTourBest) {
+//             distanceInTourBest = distanceInTourNew;
+//             fprintf(out, "%lf\t%lf\n", (distanceInTourBest - serviseTime) * kmhToMM, (clock() - runtime) / CLOCKS_PER_SEC);
+//         }
+//         distanceInTourNew = 0.0;
+//         printf("All days: %d\n", days);
+//     }
+//     fprintf(out, "%lf\t%lf\n", (distanceInTourBest - serviseTime) * kmhToMM, (clock() - runtime) / CLOCKS_PER_SEC);
+//     fputc('\n', out);
+//     free(sub);
 
-    fclose(out);
-    finalizehalfmatrix(&m);
+//     fclose(out);
+//     finalizehalfmatrix(&m);
 
-    return 0;
-}
+//     return 0;
+// }
