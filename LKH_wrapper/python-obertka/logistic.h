@@ -291,8 +291,8 @@ double lkh2opt(town *sub, int lenSub, halfmatrix* m)
 	double best = subtourdistance(subcopy, lenSub, m), newd;
 	// int a, b;
 
-	printf("Old distance: %lf\n", best);
-	printf("Old list: "); printTownList(lenSub, subcopy);
+	// printf("Old distance: %lf\n", best);
+	// printf("Old list: "); printTownList(lenSub, subcopy);
 	//Основной цикл lkh
 	double runtime = clock(); 
 	for(int a = 0; a < lenSub; a++)
@@ -320,8 +320,8 @@ double lkh2opt(town *sub, int lenSub, halfmatrix* m)
 			}
 		}
 	}
-	printf("New distance: %lf\n", best);
-	printf("New list: "); printTownList(lenSub, sub);
+	// printf("New distance: %lf\n", best);
+	// printf("New list: "); printTownList(lenSub, sub);
 	return best;
 }
 

@@ -16,7 +16,7 @@ static PyObject *parseOneTwTownPy(PyObject *self, PyObject *args) {
    if (!PyArg_ParseTuple(args, "ssi", &in, &out, &tcountTown)) {
       return NULL;
    }
-   printf("%d\n", maxCapacity);
+   // printf("%d\n", maxCapacity);
 
    parseOneTwTownNoIndex(in, out, tcountTown);
    return Py_BuildValue("s", "Hello, Python extensions!!");
@@ -31,38 +31,294 @@ static PyObject *parseOneTownPy(PyObject *self, PyObject *args) {
    if (!PyArg_ParseTuple(args, "ssi", &in, &out, &countTown)) {
       return NULL;
    }
-   printf("%d\n", maxCapacity);
+   // printf("%d\n", maxCapacity);
 
 
    parseOneTownNoIndex(in, out, countTown);
    return Py_BuildValue("s", "Hello, Python extensions!!");
 }
 
+void write_cvrp_subtour(FILE* res_f,town* sub, int len_sub)
+{
+   for(int i = 0; i < len_sub-1; i++)
+   {
+      fprintf(res_f, "%d ", sub[i].name);
+   }
+   fprintf(res_f, "%d#", sub[len_sub-1].name);
+}
+
+void write_cvrp_end_tour(FILE* res_f, double distanceInTour)
+{
+   fprintf(res_f, "@%lf@", distanceInTour);
+}
+
+void write_cvrptw_subtour(FILE* res_f, twtown* sub, int len_sub)
+{
+   for(int i = 0; i < len_sub-1; i++)
+   {
+      fprintf(res_f, "%d ", sub[i].t.name);
+   }
+   fprintf(res_f, "%d#", sub[len_sub-1].t.name);
+}
+
+void write_cvrptw_end_tour(FILE* res_f, double distanceInTour)
+{
+   fprintf(res_f, "@%lf@", distanceInTour);
+}
+
 #define CVRP(algfunc) \
    srand(time(NULL)); \
    FILE *out = fopen(fileout, "w");\
+   FILE *res_distance = fopen("res_distance.txt", "w");\
 	if(out == NULL) {exit(-1);}\
    town towns[countTowns]; \
    halfmatrix m; \
-	for(int i = 0; i < countFilesBin; i++) { readOneTownByBinaryNoIndex(towns, &m, in); for(int c = 0; c < countTowns; c++) { if(towns[c].weight > maxCapacity) { towns[c] = zerotown; printf("c: %d\n", c); } } town *sub = (town*)malloc((countTowns - 1) * sizeof(town)); int w = 0; town t; for(int i = 1; i < countTowns; i++) { t = getTownByName(i, countTowns, towns); if(t.name == -1){ printf("Error town: %d\n", t.name); continue; } sub[w] = t; w++; } int newCountTowns = w; sub = realloc(sub, newCountTowns * sizeof(town)); town temp[countTowns]; temp[0] = towns[0]; double distanceInTourBest = -1.0, distanceInTourNew = 0.0, noneOptimalDistance = 0.0; double runtime = clock(); for(int i = 0; i < countTasks;i++) { doShuffle(newCountTowns, sub); int cap = 0, l = 0; for(int g = 0; g < newCountTowns; g++) { if(cap + sub[g].weight <= maxCapacity) { temp[l] = sub[g]; l++; cap += sub[g].weight; } else { noneOptimalDistance += subtourdistance(temp, l, &m); if(l >= 3) { distanceInTourNew += algfunc(temp, l, &m); } else { distanceInTourNew += subtourdistance(temp, l, &m); } cap = 0; l = 0; g--; } } noneOptimalDistance += subtourdistance(temp, l, &m); if(l >= 3) { distanceInTourNew += algfunc(temp, l, &m); } else { distanceInTourNew += subtourdistance(temp, l, &m); } if(distanceInTourBest == -1.0) { fprintf(out, "%lf\t%lf\n", noneOptimalDistance, 0.0); distanceInTourBest = noneOptimalDistance; } if(distanceInTourNew < distanceInTourBest) { distanceInTourBest = distanceInTourNew; fprintf(out, "%lf\t%lf\n", distanceInTourBest, (clock() - runtime) / CLOCKS_PER_SEC); } distanceInTourNew = 0.0; } fprintf(out, "%lf\t%lf\n", distanceInTourBest, (clock() - runtime) / CLOCKS_PER_SEC); fputc('\n', out); free(sub); } fclose(out); finalizehalfmatrix(&m);
-
+   readOneTownByBinaryNoIndex(towns, &m, in);\
+   for(int c = 0; c < countTowns; c++) {\
+      if(towns[c].weight > maxCapacity) \
+      {\
+         towns[c] = zerotown; \
+         printf("c: %d\n", c);\
+      }\
+   }\
+   town *sub = (town*)malloc((countTowns - 1) * sizeof(town));\
+   int w = 0;\
+   town t;\
+   for(int i = 1; i < countTowns; i++) {\
+      t = getTownByName(i, countTowns, towns);\
+      if(t.name == -1){\
+         printf("Error town: %d\n", t.name);\
+         continue;\
+      }\
+      sub[w] = t;\
+      w++;\
+   }\
+   int newCountTowns = w;\
+   sub = realloc(sub, newCountTowns * sizeof(town));\
+   town temp[countTowns];\
+   temp[0] = towns[0];\
+   double distanceInTourBest = -1.0, distanceInTourNew = 0.0, noneOptimalDistance = 0.0;\
+   double runtime = clock();\
+   for(int i = 0; i < countTasks;i++) {\
+      doShuffle(newCountTowns, sub);\
+      int cap = 0, l = 0;\
+      for(int g = 0; g < newCountTowns; g++) {\
+         if(cap + sub[g].weight <= maxCapacity) {\
+            temp[l] = sub[g];\
+            l++;\
+            cap += sub[g].weight;\
+         }\
+         else {\
+            noneOptimalDistance += subtourdistance(temp, l, &m);\
+            if(l >= 3) {\
+               distanceInTourNew += algfunc(temp, l, &m);\
+               write_cvrp_subtour(res_distance, temp, l); \
+            }\
+            else {\
+               distanceInTourNew += subtourdistance(temp, l, &m);\
+               write_cvrp_subtour(res_distance, temp, l); \
+            }\
+            cap = 0; l = 0; g--; }\
+         }\
+      noneOptimalDistance += subtourdistance(temp, l, &m);\
+      if(l >= 3) {\
+         distanceInTourNew += algfunc(temp, l, &m);\
+         write_cvrp_subtour(res_distance, temp, l); \
+      }\
+      else {\
+         distanceInTourNew += subtourdistance(temp, l, &m);\
+         write_cvrp_subtour(res_distance, temp, l); \
+      }\
+      if(distanceInTourBest == -1.0) {\
+         fprintf(out, "%lf\t%lf\n", noneOptimalDistance, 0.0);\
+         distanceInTourBest = noneOptimalDistance;}\
+      if(distanceInTourNew < distanceInTourBest) {\
+         distanceInTourBest = distanceInTourNew;\
+         write_cvrp_end_tour(res_distance, distanceInTourBest);\
+         fprintf(out, "%lf\t%lf\n", distanceInTourBest, (clock() - runtime) / CLOCKS_PER_SEC); }\
+      else {\
+         write_cvrp_end_tour(res_distance, -1);\
+      } \
+      distanceInTourNew = 0.0; }\
+   fprintf(out, "%lf\t%lf\n", distanceInTourBest, (clock() - runtime) / CLOCKS_PER_SEC);\
+   fputc('\n', out);\
+   free(sub); \
+   fclose(out); \
+   fclose(res_distance); \
+   finalizehalfmatrix(&m);
 
 #define CVRPTW(algfunc) \
    srand(time(NULL)); \
    FILE *out = fopen(fileout, "w"); \
+   FILE *res_distance = fopen("res_distance.txt", "w");\
    twtown *towns; \
    towns = malloc(tcountTown * sizeof(twtown));\
    halfmatrix m; \
    readOneTwTownByBinaryNoIndex(towns, &m, in); \
-   twtown town0 = getTwTownByName(0, countTowns, towns);double timer = town0.mTimeStart;double endTime = town0.mTimeEnd;printTwTownList(towns, tcountTown); for(int c = 0; c < tcountTown; c++) {     if(town0.mTimeStart < town0.mTimeEnd && town0.mTimeStart > towns[c].mTimeEnd && towns[c].mTimeEnd > towns[c].mTimeStart)    {        printf("1/11 ");        towns[c].t = zerotown;        printf("c: %d", c);    }    if(town0.mTimeEnd < towns[c].mTimeStart && town0.mTimeStart > towns[c].mTimeEnd && towns[c].mTimeStart > towns[c].mTimeEnd && town0.mTimeEnd > town0.mTimeStart)     {        printf("12 ");        towns[c].t = zerotown;        printf("c: %d", c);    }    if(town0.mTimeStart > towns[c].mTimeStart && town0.mTimeStart < towns[c].mTimeEnd && town0.mTimeEnd > towns[c].mTimeEnd)    {        printf("2 ");        towns[c].mTimeStart = town0.mTimeStart;    }    if(town0.mTimeEnd > towns[c].mTimeStart && town0.mTimeStart < towns[c].mTimeEnd && town0.mTimeEnd < town0.mTimeStart)    {        printf("3 ");        continue;    }    if(town0.mTimeStart < towns[c].mTimeStart && town0.mTimeEnd > towns[c].mTimeEnd && towns[c].mTimeEnd < towns[c].mTimeStart && town0.mTimeEnd < town0.mTimeStart)    {        printf("4 ");        continue;    }    if(town0.mTimeStart < towns[c].mTimeEnd && towns[c].mTimeStart > town0.mTimeEnd && towns[c].mTimeStart > towns[c].mTimeEnd)    {        printf("5 ");        continue;    }    if(town0.mTimeStart < towns[c].mTimeEnd && towns[c].mTimeStart < town0.mTimeEnd && towns[c].mTimeStart > towns[c].mTimeEnd)    {        printf("6 ");        continue;    }    if (town0.mTimeStart > towns[c].mTimeEnd && town0.mTimeEnd > towns[c].mTimeStart && towns[c].mTimeStart > towns[c].mTimeEnd)    {        printf("7 ");        continue;    }    if (towns[c].mTimeEnd > towns[c].mTimeStart && town0.mTimeEnd > towns[c].mTimeEnd && town0.mTimeStart > town0.mTimeEnd)    {        printf("8 ");        continue;    }        if (towns[c].mTimeEnd > towns[c].mTimeStart && towns[c].mTimeStart > town0.mTimeStart && towns[c].mTimeEnd > town0.mTimeEnd)    {        printf("9 ");        continue;    }    if (towns[c].mTimeEnd > towns[c].mTimeStart && towns[c].mTimeStart < town0.mTimeStart && towns[c].mTimeEnd > town0.mTimeEnd)    {        printf("9 3/4 ");        towns[c].mTimeStart = town0.mTimeStart;        towns[c].mTimeEnd = town0.mTimeEnd;    }        if (towns[c].mTimeStart < town0.mTimeStart && towns[c].mTimeEnd < town0.mTimeEnd && town0.mTimeStart > town0.mTimeEnd)    {        printf("10 ");        towns[c].mTimeStart = town0.mTimeStart;    }        if(towns[c].t.weight > maxCapacity || (towns[c].mTimeStart - towns[c].mTimeEnd) == 0) {        printf("%d", towns[c].t.weight);        towns[c].t = zerotown;        printf("c: %d", c);    }    if(town0.mTimeStart - town0.mTimeEnd == 0)    {        printf("Impossible to optimize tour");        exit(-1);    }}printtwtown(towns[1]);twtown *sub = (twtown*)malloc((countTowns - 1) * sizeof(twtown));int w = 0; twtown t;for(int i = 1; i < countTowns; i++){    t = getTwTownByName(i, countTowns, towns);    if(t.t.name == -1) {        printf("Error town: %d", t.t.name);        continue;    }    sub[w] = t;    w++;}int newCountTowns = w;sub = realloc(sub, newCountTowns * sizeof(twtown));printf("sub: ");for(int i = 0; i < newCountTowns; i++) {    printf("%d ", sub[i].t.name);} putchar('\n');printtwtown(sub[1]);twtown temp[countTowns];temp[0] = towns[0];double td;double distanceInTourBest = -1.0, distanceInTourNew = 0.0, noneOptimalDistance = 0.0;printf("%d", getTwTownByName(16, newCountTowns - 1, sub).t.weight);double runtime = clock();double serviseTime = 0;for(int i = 0; i < newCountTowns; i++) {    serviseTime += sub[i].mTimeService;}printf("%lf %d", serviseTime, newCountTowns);for(int i = 0; i < countTasks;i++){    int days = 1;    doShuffleTw(newCountTowns, sub);    int cap = 0, l = 0;    for(int g = 0; g < newCountTowns; g++) {                if(cap + sub[g].t.weight <= maxCapacity) {            temp[l] = sub[g];            l++;            cap += sub[g].t.weight;        } else {            noneOptimalDistance += subtourdistanceTw(temp, l, &m, timer, endTime);            if(l >= 3) {                td = algfunc(temp, l, &m, &timer, endTime);                if(td == -1) {                    days++;                    timer = town0.mTimeStart;                    td = algfunc(temp, l, &m, &timer, endTime);                    if(td == -1) {                        printf("Skipping Task.");                        continue;                    }                }                printf("\nFinal total time for subtour: %lf", td);                timer += td;                distanceInTourNew += td;            } else {                td = subtourdistanceTw(temp, l, &m, timer, endTime);                if(td == -1) {                    days++;                    timer = town0.mTimeStart;                    td = subtourdistanceTw(temp, l, &m, timer, endTime);                    if(td == -1) {                        printf("Skipping Task.");                        continue;                    }                }                timer += td;                distanceInTourNew += td;            }            cap = 0;            l = 0;            g--;        }    }    if(l >= 3) {        td = algfunc(temp, l, &m, &timer, endTime);        if(td == -1) {            days++;            timer = town0.mTimeStart;            td = algfunc(temp, l, &m, &timer, endTime);            if(td == -1) {                printf("Skipping Task.");                continue;            }        }        printf("\nFinal total time for subtour: %lf", td);        timer += td;        distanceInTourNew += td;    } else {        td = subtourdistanceTw(temp, l, &m, timer, endTime);        if(td == -1) {            days++;            timer = town0.mTimeStart;            td = subtourdistanceTw(temp, l, &m, timer, endTime);            if(td == -1) {                printf("Skipping Task.");                continue;            }        }        timer += td;        distanceInTourNew += td;    }    if(distanceInTourBest == -1.0) {        fprintf(out, "%lf\t%lf\n", (distanceInTourNew - serviseTime) * kmhToMM, 0.0);       distanceInTourBest = distanceInTourNew;    }    if(distanceInTourNew < distanceInTourBest) {        distanceInTourBest = distanceInTourNew;        fprintf(out, "%lf\t%lf\n", (distanceInTourBest - serviseTime) * kmhToMM, (clock() - runtime) / CLOCKS_PER_SEC);    }    distanceInTourNew = 0.0;    printf("\nAll days: %d\n", days);}fprintf(out, "%lf\t%lf\n", (distanceInTourBest - serviseTime) * kmhToMM, (clock() - runtime) / CLOCKS_PER_SEC);fputc('\n', out);free(sub);fclose(out);finalizehalfmatrix(&m);
+   twtown town0 = getTwTownByName(0, countTowns, towns);\
+   double timer = town0.mTimeStart;\
+   double endTime = town0.mTimeEnd;\
+   printTwTownList(towns, tcountTown);\
+   for(int c = 0; c < countTowns; c++)\
+   {\
+      if((town0.mTimeStart < town0.mTimeEnd && town0.mTimeStart > towns[c].mTimeEnd && towns[c].mTimeEnd > towns[c].mTimeStart) || \
+           (town0.mTimeEnd < towns[c].mTimeStart && town0.mTimeStart > towns[c].mTimeEnd && towns[c].mTimeStart > towns[c].mTimeEnd && town0.mTimeEnd > town0.mTimeStart))\
+      {\
+         towns[c].t = zerotown;\
+         printf("c: %d\n", c);\
+      }\
+      else if((town0.mTimeStart > towns[c].mTimeStart && town0.mTimeStart < towns[c].mTimeEnd && town0.mTimeEnd > towns[c].mTimeEnd) || \
+         (towns[c].mTimeStart < town0.mTimeStart && towns[c].mTimeEnd < town0.mTimeEnd && town0.mTimeStart > town0.mTimeEnd))\
+      {\
+         towns[c].mTimeStart = town0.mTimeStart;\
+      }\
+      else if(towns[c].mTimeEnd > towns[c].mTimeStart && towns[c].mTimeStart < town0.mTimeStart && towns[c].mTimeEnd > town0.mTimeEnd)\
+      {\
+         towns[c].mTimeStart = town0.mTimeStart;\
+         towns[c].mTimeEnd = town0.mTimeEnd;\
+      }\
+      else if((town0.mTimeEnd > towns[c].mTimeStart && town0.mTimeStart < towns[c].mTimeEnd && town0.mTimeEnd < town0.mTimeStart) || \
+         (town0.mTimeStart < towns[c].mTimeStart && town0.mTimeEnd > towns[c].mTimeEnd && towns[c].mTimeEnd < towns[c].mTimeStart && town0.mTimeEnd < town0.mTimeStart) || \
+         (town0.mTimeStart < towns[c].mTimeEnd && towns[c].mTimeStart > town0.mTimeEnd && towns[c].mTimeStart > towns[c].mTimeEnd) || \
+         (town0.mTimeStart < towns[c].mTimeEnd && towns[c].mTimeStart < town0.mTimeEnd && towns[c].mTimeStart > towns[c].mTimeEnd) || \
+         (town0.mTimeStart > towns[c].mTimeEnd && town0.mTimeEnd > towns[c].mTimeStart && towns[c].mTimeStart > towns[c].mTimeEnd) || \
+         (towns[c].mTimeEnd > towns[c].mTimeStart && town0.mTimeEnd > towns[c].mTimeEnd && town0.mTimeStart > town0.mTimeEnd) || \
+         (towns[c].mTimeEnd > towns[c].mTimeStart && towns[c].mTimeStart > town0.mTimeStart && towns[c].mTimeEnd > town0.mTimeEnd))\
+      {\
+         continue;\
+      }\
+      if(towns[c].t.weight > maxCapacity || (towns[c].mTimeStart - towns[c].mTimeEnd) == 0) {\
+         printf("%d", towns[c].t.weight);\
+         towns[c].t = zerotown;\
+         printf("c: %d\n", c);\
+      }\
+      if(town0.mTimeStart - town0.mTimeEnd == 0)\
+      {\
+         printf("Impossible to optimize tour");\
+         exit(-1);\
+      }\
+   }\
+   printtwtown(towns[1]);\
+   twtown *sub = (twtown*)malloc((countTowns - 1) * sizeof(twtown));\
+   int w = 0;\
+   twtown t;\
+   for(int i = 1; i < countTowns; i++){\
+      t = getTwTownByName(i, countTowns, towns);\
+      if(t.t.name == -1) {printf("Error town: %d", t.t.name); continue;}\
+      sub[w] = t;\
+      w++;\
+   }\
+   int newCountTowns = w;\
+   sub = realloc(sub, newCountTowns * sizeof(twtown));\
+   printf("sub: ");\
+   for(int i = 0; i < newCountTowns; i++) {\
+      printf("%d ", sub[i].t.name);\
+   }\
+   putchar('\n');\
+   printtwtown(sub[1]);\
+   twtown temp[countTowns];\
+   temp[0] = towns[0];\
+   double td;\
+   double distanceInTourBest = -1.0, distanceInTourNew = 0.0;\
+   printf("%d", getTwTownByName(16, newCountTowns - 1, sub).t.weight);\
+   double runtime = clock();\
+   double serviseTime = 0;\
+   for(int i = 0; i < newCountTowns; i++) {\
+      serviseTime += sub[i].mTimeService;\
+   }\
+   printf("%lf %d", serviseTime, newCountTowns);\
+   int days, cap, l;\
+   for(int i = 0; i < countTasks;i++){\
+      days = 1;\
+      doShuffleTw(newCountTowns, sub);\
+      cap = 0;\
+      l = 0;\
+      for(int g = 0; g < newCountTowns; g++) {\
+         if(cap + sub[g].t.weight <= maxCapacity) {\
+            temp[l] = sub[g];\
+            l++;\
+            cap += sub[g].t.weight;\
+         } else {\
+            if(l >= 3) {\
+               td = algfunc(temp, l, &m, &timer, endTime);\
+               if(td == -1) {\
+                  days++;\
+                  timer = town0.mTimeStart;\
+                  td = algfunc(temp, l, &m, &timer, endTime);\
+                  if(td == -1) {write_cvrptw_end_tour(res_distance, -1);printf("Skipping Task."); continue;}\
+               }\
+               write_cvrptw_subtour(res_distance, temp, l); \
+               printf("\nFinal total time for subtour: %lf", td);\
+               timer += td;\
+               distanceInTourNew += td;\
+            } else {\
+               td = subtourdistanceTw(temp, l, &m, timer, endTime);\
+               if(td == -1) {\
+                  days++;\
+                  timer = town0.mTimeStart;\
+                  td = subtourdistanceTw(temp, l, &m, timer, endTime);\
+                  if(td == -1) {write_cvrptw_end_tour(res_distance, -1);printf("Skipping Task.");continue;}\
+               }\
+               write_cvrptw_subtour(res_distance, temp, l); \
+               timer += td;\
+               distanceInTourNew += td;\
+            }\
+            cap = 0;l = 0;g--;\
+         }\
+      }\
+      if(l >= 3) {\
+         td = algfunc(temp, l, &m, &timer, endTime);\
+         if(td == -1) {\
+            days++;\
+            timer = town0.mTimeStart;\
+            td = algfunc(temp, l, &m, &timer, endTime);\
+            if(td == -1) {write_cvrptw_end_tour(res_distance, -1);printf("Skipping Task.");continue;}\
+         }\
+         write_cvrptw_subtour(res_distance, temp, l);\
+         printf("\nFinal total time for subtour: %lf", td);\
+         timer += td;\
+         distanceInTourNew += td;\
+      } else {\
+         td = subtourdistanceTw(temp, l, &m, timer, endTime);\
+         if(td == -1) {\
+            days++;\
+            timer = town0.mTimeStart;\
+            td = subtourdistanceTw(temp, l, &m, timer, endTime);\
+            if(td == -1) {write_cvrptw_end_tour(res_distance, -1);printf("Skipping Task.");continue;}\
+         }\
+         write_cvrptw_subtour(res_distance, temp, l); \
+         timer += td;\
+         distanceInTourNew += td;\
+      }\
+      if(distanceInTourBest == -1.0) {\
+         fprintf(out, "%lf\t%lf\n", (distanceInTourNew - serviseTime) * kmhToMM, 0.0);\
+         distanceInTourBest = distanceInTourNew;   } \
+      if(distanceInTourNew < distanceInTourBest) {\
+         distanceInTourBest = distanceInTourNew;\
+         write_cvrptw_end_tour(res_distance, distanceInTourBest);\
+         fprintf(out, "%lf\t%lf\n", (distanceInTourBest - serviseTime) * kmhToMM, (clock() - runtime) / CLOCKS_PER_SEC);\
+      }\
+      else {\
+         write_cvrptw_end_tour(res_distance, -1);\
+      }\
+      distanceInTourNew = 0.0;\
+      printf("\nAll days: %d\n", days);\
+   }\
+   fprintf(out, "%lf\t%lf\n", (distanceInTourBest - serviseTime) * kmhToMM, (clock() - runtime) / CLOCKS_PER_SEC);\
+   fputc('\n', out);\
+   free(sub);\
+   fclose(out);\
+   finalizehalfmatrix(&m);\
    
 static PyObject *modelMetaHeuristic(PyObject *self, PyObject *args) {
    char *in, *algname;
-   int tcountTown; double maxCapacity;
+   int tcountTown; 
+   double maxCapacity;
 
    if (!PyArg_ParseTuple(args, "ssid", &algname, &in, &tcountTown, &maxCapacity)) {
       return NULL;
    }
+   countTowns = tcountTown;
 
    if(strcmp(algname, "cvrp_lkh_2opt") == 0) {
       char fileout[] = "LKH_2opt_CVRP_result.txt";
@@ -76,7 +332,6 @@ static PyObject *modelMetaHeuristic(PyObject *self, PyObject *args) {
       char fileout[] = "SA_CVRP_result.txt";
       CVRP(sa);
    } 
-   //TODO: lkh2opt для CVRPTW
    else if(strcmp(algname, "cvrptw_lkh_2opt") == 0) {
       char fileout[] = "LKH_2opt_CVRPTW_result.txt";
       CVRPTW(lkh2optTw); 
