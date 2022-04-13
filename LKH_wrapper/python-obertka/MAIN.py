@@ -1,6 +1,8 @@
 # from typing_extensions import Self
 import vrp_c
+from gurobi_CVRP import Gurobi
 from datetime import datetime
+import os
 #import helloworld
 # help(vrp_c)
 
@@ -23,7 +25,8 @@ def parse_dist_and_tour():
     with open('res_distance.txt', 'r') as read_file:
         data = read_file.read().split('@')[:-1]
         for i in range(len(data)-1, 0, -2):
-            data[i] = data[i].replace('#', '')
+            # data[i] = data[i].replace('#', '')
+            print(data[i])
             if(float(data[i]) != -1):
                 max_count = float(data[i])
                 mas_dist = list(map(lambda t: list(map(int, t.split(' '))), data[i-1][:-1].split('#')))
@@ -32,6 +35,9 @@ def parse_dist_and_tour():
         
 
 class CVRP (VRP):
+    """
+    Это основной класс для решения задачи CVRP
+    """
     def __init__ (self, name_file, path_folder, count_towns, countTasks: int = 10000, capacity: int = 30):
         super().__init__(name_file, path_folder, count_towns, countTasks)
         self.capacity = capacity
@@ -42,22 +48,36 @@ class CVRP (VRP):
         # для SA и LKH моей реализации
         print("Parse from CVRP")
         vrp_c.parseOneTownPy(self.name_file, self.path_folder, self.count_towns)
-        
+   
     def sa(self, T: float = 1000, t_min: float = 10) -> [float, list]:
+        """
+    Данная функция вызывает алгоритм "Имитации отжига" для решения задачи CVRP.
+    Первым параметром подается начальная температура T, которая с течением времени убывает.
+    Вторым параметром подается конечная температур t_min - это температура, до которой будет опускаться T.
+        """ 
         vrp_c.modelMetaHeuristic("cvrp_sa", self.path_folder, self.count_towns, self.capacity)
         return parse_dist_and_tour()
-
+  
     def lkh(self, name_opt: str = 'lkh3opt') -> [float, list]:
+        """
+    Данная функция вызывает алгоритм "Эвристика Лина-Кёрниган" для решения задачи CVRP.
+    Подается один параметр это name_opt. Реализация данного алгоритма имеет два варианта
+    это "2-opt" и "3-opt", поэтому в функцию подает одно из этих названий. 
+        """
         if(name_opt == 'lkh2opt'):
             vrp_c.modelMetaHeuristic("cvrp_lkh_2opt", self.path_folder, self.count_towns, self.capacity)
         else:
             vrp_c.modelMetaHeuristic("cvrp_lkh_3opt", self.path_folder, self.count_towns, self.capacity)
         return parse_dist_and_tour()
 
-    def gurobi(self) -> [float, list]:
+    def gurobi(self) -> [float, list]: #TODO: доделать для Gurobi
+        # Gurobi(21)
         pass
 
 class CVRPTW (CVRP):
+    """
+    Это основной класс для решения задачи CVRPTW
+    """
     def __init__ (self,  name_file, path_folder, count_towns, countTasks: int = 10000, capacity: int = 30, time_start: int = 0, time_end: int = 0):
         super().__init__(name_file, path_folder, count_towns, countTasks, capacity)
         self.time_start = time_start
@@ -84,29 +104,25 @@ class CVRPTW (CVRP):
     def gurobi(self) -> [float, list]:
         pass
 
-#TODO: Расстояния в CVRP и CVRPTW либо перевести в метры, либо в киллометры 
 def main():
     lst = [
-        "20(20 задач)/20201025_141430.csv",
-        "20(20 задач)/20201025_142105.csv", 
-        "20(20 задач)/20201101_150113.csv", 
-        "20(20 задач)/20201115_132354.csv", 
-        "20(20 задач)/20201116_232344.csv", 
-        "20(20 задач)/20201224_222701.csv", 
-        "20(20 задач)/20201225_204810.csv", 
-        "20(20 задач)/20201228_230627.csv", 
-        "20(20 задач)/20200925_093755.csv", 
-        # "20/20200927_100114.csv", 
-        # "20/20200928_114457.csv", 
-        # "20/20200930_163005.csv", 
-        # "20/20201005_160200.csv", 
-        # "20/20201008_165020.csv", 
-        # "20/20201014_154416.csv" 
+        # "20(20 задач)/20201025_141430.csv",
+        # "20(20 задач)/20201025_142105.csv", 
+        # "20(20 задач)/20201101_150113.csv", 
+        # "20(20 задач)/20201115_132354.csv", 
+        # "20(20 задач)/20201116_232344.csv", 
+        # "20(20 задач)/20201224_222701.csv", 
+        # "20(20 задач)/20201225_204810.csv", 
+        # "20(20 задач)/20201228_230627.csv", 
+        # "20(20 задач)/20200925_093755.csv", 
+        "20/20200927_100114.csv", 
+        "20/20200928_114457.csv", 
+        "20/20200930_163005.csv", 
+        "20/20201005_160200.csv", 
+        "20/20201008_165020.csv", 
+        "20/20201014_154416.csv" 
     ]
     
-    with open('LKH_RES.txt', 'w') as write_file:
-        write_file.write('')
-
     # TODO: сделать нормальное создание бинарников
     # help(vrp_c) #TODO: доделать документацию
     print('What do you want to solve: CVRP or CVRPTW?')
@@ -139,6 +155,7 @@ def main():
                     with open('LKH_RES_CVRP.txt', 'a') as write_file:
                         write_file.write(data)
         else:
+            Gurobi(21)
             pass #TODO: доделать для Gurobi
     else:
         print('which method do you want to use to optimize the routse: SA or LKH or Gurobi?')

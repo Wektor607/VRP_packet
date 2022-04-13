@@ -44,7 +44,7 @@ def distance_file(n, lst, lst_distance):
                 j_start += 1
         dist.to_csv(file_dist, index = False)
 
-def main():
+def Gurobi(n):
     lst = [
         "20(20 задач)/20201025_141430.csv",
         "20(20 задач)/20201025_142105.csv", 
@@ -80,8 +80,8 @@ def main():
         "20(20 задач)/20201008_165020_dist.csv",
         "20(20 задач)/20201014_154416_dist.csv"
     ]
-    print("Введите кол-во городов (21 или 51 или 101): ", end ='')
-    # n = int(input())
+
+
     distance_file(n, lst, lst_distance)
     print("I'm create file!!")
     for name_file1, name_file2 in zip(lst, lst_distance):
@@ -187,6 +187,3 @@ def main():
             print('Optimal cost: %g' % model.objVal)
             lst.append(model.objVal)
             lst_time.append(time_limit)
-
-if __name__ == "__main__":
-    main()
