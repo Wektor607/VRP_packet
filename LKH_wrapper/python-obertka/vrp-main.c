@@ -295,7 +295,7 @@ void write_cvrptw_end_tour(FILE* res_f, double distanceInTour)
          distanceInTourBest = distanceInTourNew;   } \
       if(distanceInTourNew < distanceInTourBest) {\
          distanceInTourBest = distanceInTourNew;\
-         write_cvrptw_end_tour(res_distance, distanceInTourBest);\
+         write_cvrptw_end_tour(res_distance, (distanceInTourBest - serviseTime) * kmhToMM);\
          fprintf(out, "%lf\t%lf\n", (distanceInTourBest - serviseTime) * kmhToMM, (clock() - runtime) / CLOCKS_PER_SEC);\
       }\
       else {\
