@@ -151,6 +151,8 @@ void write_cvrptw_end_tour(FILE* res_f, double distanceInTour)
    srand(time(NULL)); \
    FILE *out = fopen(fileout, "w"); \
    FILE *res_distance = fopen("res_distance.txt", "w");\
+   if(res_distance == NULL) {exit(-1);}\
+   if(out == NULL) {exit(-1);}\
    twtown *towns; \
    towns = malloc(tcountTown * sizeof(twtown));\
    halfmatrix m; \
@@ -216,7 +218,7 @@ void write_cvrptw_end_tour(FILE* res_f, double distanceInTour)
    }\
    putchar('\n');\
    printtwtown(sub[1]);\
-   twtown temp[countTowns];\
+   twtown temp[newCountTowns];\
    temp[0] = towns[0];\
    double td;\
    double distanceInTourBest = -1.0, distanceInTourNew = 0.0;\
@@ -224,9 +226,10 @@ void write_cvrptw_end_tour(FILE* res_f, double distanceInTour)
    double runtime = clock();\
    double serviseTime = 0;\
    for(int i = 0; i < newCountTowns; i++) {\
+      printf("TUTA %lf %d\n", serviseTime, i);\
       serviseTime += sub[i].mTimeService;\
    }\
-   printf("%lf %d", serviseTime, newCountTowns);\
+   printf("%lf %d\n", serviseTime, newCountTowns);\
    int days, cap, l;\
    for(int i = 0; i < countTasks;i++){\
       days = 1;\
@@ -248,7 +251,6 @@ void write_cvrptw_end_tour(FILE* res_f, double distanceInTour)
                   if(td == -1) {write_cvrptw_end_tour(res_distance, -1);printf("Skipping Task."); continue;}\
                }\
                write_cvrptw_subtour(res_distance, temp, l); \
-               printf("\nFinal total time for subtour: %lf", td);\
                timer += td;\
                distanceInTourNew += td;\
             } else {\
@@ -275,7 +277,6 @@ void write_cvrptw_end_tour(FILE* res_f, double distanceInTour)
             if(td == -1) {write_cvrptw_end_tour(res_distance, -1);printf("Skipping Task.");continue;}\
          }\
          write_cvrptw_subtour(res_distance, temp, l);\
-         printf("\nFinal total time for subtour: %lf", td);\
          timer += td;\
          distanceInTourNew += td;\
       } else {\
@@ -295,6 +296,7 @@ void write_cvrptw_end_tour(FILE* res_f, double distanceInTour)
          distanceInTourBest = distanceInTourNew;   } \
       if(distanceInTourNew < distanceInTourBest) {\
          distanceInTourBest = distanceInTourNew;\
+         printf("\nAll days: %d\n", days);\
          write_cvrptw_end_tour(res_distance, (distanceInTourBest - serviseTime) * kmhToMM);\
          fprintf(out, "%lf\t%lf\n", (distanceInTourBest - serviseTime) * kmhToMM, (clock() - runtime) / CLOCKS_PER_SEC);\
       }\
@@ -302,12 +304,13 @@ void write_cvrptw_end_tour(FILE* res_f, double distanceInTour)
          write_cvrptw_end_tour(res_distance, -1);\
       }\
       distanceInTourNew = 0.0;\
-      printf("\nAll days: %d\n", days);\
    }\
    fprintf(out, "%lf\t%lf\n", (distanceInTourBest - serviseTime) * kmhToMM, (clock() - runtime) / CLOCKS_PER_SEC);\
    fputc('\n', out);\
    free(sub);\
+   free(towns);\
    fclose(out);\
+   fclose(res_distance); \
    finalizehalfmatrix(&m);\
    
 static PyObject *modelMetaHeuristic(PyObject *self, PyObject *args) {
@@ -352,19 +355,19 @@ static PyObject *modelMetaHeuristic(PyObject *self, PyObject *args) {
 }
 
 static char helloworld_docs1[] = 
-   "parseOneTownPy(filename1, filename2, countTowns, maxCapacity): create a bin-file with distance-table and town-list\n";
-static char helloworld_docs2[] = 
-   "parseOneTwTownPy(filename1, filename2, countTowns): analog parseOneTownPy, but with time parsing\n";
-static char helloworld_docs3[] = 
-   "modelMetaHeuristic(algname, filename, countTowns, maxCapacity) - choose your algoritm and enter your bin-file\n";
+   "Для просмотра документации к программе необходимо:\n"
+   "  Если Вы работает в ОС Windows:\n"
+   "     1. Открыть Проводник и в пути до папки с файлами написать: cmd. Автоматически должна открыть командная строка с полным путем до основной папки.\n"
+   "     2. Написать в командной строке команду: start /sphinx/_build/html/index.html .\n"
+   "  Если Вы работает в ОС Linux:\n"
+   "     1. Прописать в командной строке полный путь до папки с файлами.\n"
+   "     2. Написать команду: open \\sphinx\\_build\\html\\index.html .\n"
+   "  После чего автоматически откроется документация в одном из Ваших браузеров на локальном компьютере.\n"
+   "Для выхода из файла для помощи доступа к документации введите команду: :wq .";
 
 static PyMethodDef helloworld_funcs[] = {
-   {"parseOneTownPy", (PyCFunction)parseOneTownPy,
+   {"OpenDocumentation", (PyCFunction)parseOneTownPy,
       METH_VARARGS, helloworld_docs1},
-   {"parseOneTwTownPy", (PyCFunction)parseOneTwTownPy,
-      METH_VARARGS, helloworld_docs2},
-   {"modelMetaHeuristic", (PyCFunction)modelMetaHeuristic,
-      METH_VARARGS, helloworld_docs3},
    {NULL}
 };
 
