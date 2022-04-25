@@ -58,16 +58,6 @@ car makecar(int name, int capacity)
 	return c;
 }
 
-// void logcar(const car car, int counttown, const town *towns)
-// {
-// 	printf("car[%d] move to tows[", car.name);
-// 	for(int i = 0; i < counttown - 1; i++)
-// 	{
-// 		printf("%d, ", towns[i].name);
-// 	}
-// 	printf("%d]\n", towns[counttown-1].name);
-// }
-
 town getTownByName(int name, int counttown, const town* towns)
 {
 	for(int i = 0; i < counttown; i++)
@@ -142,7 +132,6 @@ double getDistance(const town town1, const town town2)
 
 double getDistanceE(const town town1, const town town2)
 {
-	//TODO: distanse from OSRM
 	return sqrt(pow(town2.x - town1.x, 2) + pow(town2.y - town1.y, 2));
 }
 
@@ -289,10 +278,7 @@ double lkh2opt(town *sub, int lenSub, halfmatrix* m)
 	}
 
 	double best = subtourdistance(subcopy, lenSub, m), newd;
-	// int a, b;
 
-	// printf("Old distance: %lf\n", best);
-	// printf("Old list: "); printTownList(lenSub, subcopy);
 	//Основной цикл lkh
 	double runtime = clock(); 
 	for(int a = 0; a < lenSub; a++)
@@ -320,8 +306,6 @@ double lkh2opt(town *sub, int lenSub, halfmatrix* m)
 			}
 		}
 	}
-	// printf("New distance: %lf\n", best);
-	// printf("New list: "); printTownList(lenSub, sub);
 	return best;
 }
 
@@ -351,9 +335,6 @@ double lkh3opt(town *sub, int lenSub, halfmatrix *m)
 		return -1;
 	}
 
-	// printf("\n--*--\nOld distance: %lf\n", best);
-	// printf("Old list: "); printTownList(lenSub, subcopy);
-	// int a0, b0, a, b, 
 	int mode;
 
 	double runtime = clock(); 
@@ -368,7 +349,6 @@ double lkh3opt(town *sub, int lenSub, halfmatrix *m)
 					case(1): {reverseTown(subcopy, a+1, b);break;}
 					case(2): {reverseTown(subcopy, b+1, lenSub-1);break;}
 					case(3): {moveElems(subcopy, a+1, b, b+1,lenSub-1);break;}
-					// case 4, 5, 6 - crash program: Segmentation Fault
 					case(4): {
 						
 						reverseTown(subcopy, 0, a);
@@ -409,8 +389,6 @@ double lkh3opt(town *sub, int lenSub, halfmatrix *m)
 	}
 	free(subcopy);
 
-	// printf("New distance: %lf\n", best);
-	// printf("New list: "); printTownList(lenSub, sub);
 	return best;
 }
 
@@ -448,9 +426,8 @@ double sa(town *sub, int lenSub, halfmatrix *m) {
 	}
 
 	double best = subtourdistance(subcopy, lenSub, m), newd, p;
-	double runtime = clock(); 
 	int T = tmax;
-	for(int k = 0; T >= tmin && clock() - runtime < 60000000000; T = tmax / (k + 1), k++) {
+	for(int k = 0; T >= tmin; T = tmax / (k + 1), k++) {
 		GenerateStateCandidate(subcopy, sub, lenSub);
 		newd = subtourdistance(subcopy, lenSub, m);
 		if(newd < best) {
@@ -471,6 +448,5 @@ double sa(town *sub, int lenSub, halfmatrix *m) {
 			}
 		}
 	}
-
 	return best;
 }

@@ -55,7 +55,7 @@ double optimalRadius = 0.37;
 
 //(timeUpdate < ((clock() - runtime) / CLOCKS_PER_SEC))
 
-long long countTasks = 100000;
+// long long countTasks = 500;
 // long long countUpdate = 100;
 //#define timeUpdate 1500000
 //lkh3optTw

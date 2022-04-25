@@ -13,11 +13,10 @@ static PyObject *parseOneTownPy(PyObject *self, PyObject *args) {
    int countTown;
 
 
-   if (!PyArg_ParseTuple(args, "ssi", &in, &out, &countTown)) {
+   if (!PyArg_ParseTuple(args, "ssi", &in, &out, &countTown)) 
+   {
       return NULL;
    }
-   // printf("%d\n", maxCapacity);
-
 
    parseOneTownNoIndex(in, out, countTown);
    return Py_BuildValue("s", "Hello, Python extensions!!");
@@ -28,11 +27,9 @@ static PyObject *parseOneTwTownPy(PyObject *self, PyObject *args) {
    char *out;
    int tcountTown;
 
-   printf("YYYYYYYYYYYYYYYYY\n");
    if (!PyArg_ParseTuple(args, "ssi", &in, &out, &tcountTown)) {
       return NULL;
    }
-   // printf("%d\n", maxCapacity);
 
    parseOneTwTownNoIndex(in, out, tcountTown);
    return Py_BuildValue("s", "Hello, Python extensions!!");
@@ -64,6 +61,15 @@ void write_cvrptw_subtour(FILE* res_f, twtown* sub, int len_sub)
 void write_cvrptw_end_tour(FILE* res_f, double distanceInTour)
 {
    fprintf(res_f, "@%lf@", distanceInTour);
+}
+
+twtown save_request_to_sub(twtown *sub, int lensub, int idx, twtown town0)
+{
+   if(idx > (lensub-1) || idx < 0)
+   {
+      return town0;
+   }
+   return sub[idx];
 }
 
 #define CVRP(algfunc) \
@@ -219,7 +225,7 @@ void write_cvrptw_end_tour(FILE* res_f, double distanceInTour)
    putchar('\n');\
    printtwtown(sub[1]);\
    twtown temp[newCountTowns];\
-   temp[0] = towns[0];\
+   /*temp[0] = towns[0];*/\
    double td;\
    double distanceInTourBest = -1.0, distanceInTourNew = 0.0;\
    double runtime = clock();\
@@ -227,88 +233,80 @@ void write_cvrptw_end_tour(FILE* res_f, double distanceInTour)
    for(int i = 0; i < newCountTowns; i++) {\
       serviseTime += sub[i].mTimeService;\
    }\
-   int days, cap, l;\
+   int days, cap, l, g;\
    for(int i = 0; i < countTasks;i++){\
       days = 1;\
       doShuffleTw(newCountTowns, sub);\
-      cap = 0;\
       l = 0;\
-      int g = 0;\
-      for(; g < newCountTowns; g++) { \
-         if((cap + sub[g].t.weight <= maxCapacity)){\
+      g = 0;\
+      cap = 0;\
+      for(g = 0; g < newCountTowns; g++) { \
+         if(cap + sub[g].t.weight <= maxCapacity && g != newCountTowns - 1) {\
             temp[l] = sub[g];\
             l++;\
             cap += sub[g].t.weight;\
          } else {\
+            if(g == newCountTowns - 1){\
+               temp[l] = sub[g];\
+               l++;\
+            }\
             if(l >= 3) {\
                td = algfunc(temp, l, &m, &timer, endTime);  \
-               printf("%lf\n", td); \
-               if(td == -1) {\
+               if(td == -1){\
                   days++;\
+               }\
+               while(td == -1) {\
+                  /*printf("g:%d l:%d\n", g, l);\
+                  printTwTownList(sub, l);\
+                  putchar('\n');*/\
                   timer = town0.mTimeStart;\
-                  td = algfunc(temp, l, &m, &timer, endTime);\
-                  /*if(td == -1) {write_cvrptw_end_tour(res_distance, -1);printf("Skipping Task."); continue;}\*/\
-                  while(td == -1)\
+                  /*td = algfunc(temp, l, &m, &timer, endTime);*/\
+                  if(l >= 3)\
                   {\
-                     g--;l--;\
-                     printf("%d %d\n", g, l);\
                      td = algfunc(temp, l, &m, &timer, endTime);\
+                  } else {\
+                     td = subtourdistanceTw(temp, l, &m, timer, endTime);\
+                     timer += td;\
                   }\
+                  /*if(td == -1) {write_cvrptw_end_tour(res_distance, -1); continue;}*/\
+                  if(td == -1) {l--; g--;}\
                }\
                write_cvrptw_subtour(res_distance, temp, l); \
-               timer += td;\
                distanceInTourNew += td;\
             } else {\
                td = subtourdistanceTw(temp, l, &m, timer, endTime);\
-               if(td == -1) {\
+               if(td == -1){\
                   days++;\
+               }\
+               while(td == -1) {\
+                  /*printf("g:%d l:%d\n", g, l);\
+                  printTwTownList(sub, l);\
+                  putchar('\n');*/\
                   timer = town0.mTimeStart;\
-                  td = subtourdistanceTw(temp, l, &m, timer, endTime);\
-                  /*if(td == -1) {write_cvrptw_end_tour(res_distance, -1);printf("Skipping Task."); continue;}\*/\
-                  printf("%lf\n", td); \
-                  while(td == -1)\
+                  /*td = algfunc(temp, l, &m, &timer, endTime);*/\
+                  if(l >= 3)\
                   {\
-                     g--;l--;\
-                     printf("%d %d\n", g, l);\
                      td = algfunc(temp, l, &m, &timer, endTime);\
+                  } else {\
+                     td = subtourdistanceTw(temp, l, &m, timer, endTime);\
+                     timer += td;\
                   }\
+                  /*if(td == -1) {write_cvrptw_end_tour(res_distance, -1); continue;}*/\
+                  if(td == -1) {l--; g--;}\
                }\
                write_cvrptw_subtour(res_distance, temp, l); \
-               timer += td;\
                distanceInTourNew += td;\
             }\
-            cap = 0;l = 0;g--;\
+            l = 0;cap = 0;\
+           /* g--;*/\
          }\
-      }\
-      if(l >= 3) {\
-         td = algfunc(temp, l, &m, &timer, endTime);\
-         if(td == -1) {\
-            days++;\
-            timer = town0.mTimeStart;\
-            td = algfunc(temp, l, &m, &timer, endTime);\
-            if(td == -1) {write_cvrptw_end_tour(res_distance, -1);printf("Skipping Task."); continue;}\
-         }\
-         write_cvrptw_subtour(res_distance, temp, l); \
-         timer += td;\
-         distanceInTourNew += td;\
-      } else {\
-         td = subtourdistanceTw(temp, l, &m, timer, endTime);\
-         if(td == -1) {\
-            days++;\
-            timer = town0.mTimeStart;\
-            td = subtourdistanceTw(temp, l, &m, timer, endTime);\
-            if(td == -1) {write_cvrptw_end_tour(res_distance, -1);printf("Skipping Task."); continue;}\
-         }\
-         write_cvrptw_subtour(res_distance, temp, l); \
-         timer += td;\
-         distanceInTourNew += td;\
       }\
       if(distanceInTourBest == -1.0) {\
          fprintf(out, "%lf\t%lf\n", (distanceInTourNew - serviseTime) * kmhToMM, 0.0);\
          distanceInTourBest = distanceInTourNew;   } \
       if(distanceInTourNew < distanceInTourBest) {\
          distanceInTourBest = distanceInTourNew;\
-         printf("\nAll days: %d\n", days);\
+         printf("\nAll days: %d\n", days); \
          write_cvrptw_end_tour(res_distance, (distanceInTourBest - serviseTime) * kmhToMM);\
          fprintf(out, "%lf\t%lf\n", (distanceInTourBest - serviseTime) * kmhToMM, (clock() - runtime) / CLOCKS_PER_SEC);\
       }\
@@ -329,8 +327,9 @@ static PyObject *modelMetaHeuristic(PyObject *self, PyObject *args) {
    char *in, *algname;
    int tcountTown; 
    double maxCapacity;
+   double countTasks;
 
-   if (!PyArg_ParseTuple(args, "ssid", &algname, &in, &tcountTown, &maxCapacity)) {
+   if (!PyArg_ParseTuple(args, "ssidd", &algname, &in, &tcountTown, &maxCapacity, &countTasks)) {
       return NULL;
    }
    countTowns = tcountTown;

@@ -33,7 +33,6 @@ int gettownindex(const twtown* sub, const twtown city, int lensub)
 
 twtown getTwTownByName(int name, int counttown, const twtown* towns)
 {
-    // towns = malloc(counttown * sizeof(twtown));
     for(int i = 0; i < counttown; i++)
     {
         if(towns[i].t.name == name) {
@@ -68,52 +67,33 @@ void doShuffleTw(int counttown, twtown *towns)
 
 double subtourdistanceTw(twtown *sub, int lenSub, halfmatrix* m, const double timer, const double endTime)
 {
-    // 1 2 3 4 #4
-    // 01 12 23 34 40 #5
-    //printTownList(lenSub, sub);
-    if(lenSub == 0) {
+    if(lenSub == 0) 
+    {
         return 0;
     }
-    //printf("lenSub: %d\n", lenSub);
-    //printf("all sub: [");
-    /*
-    for(int i = 0; i < lenSub; i++) {
-        printf("%d ", sub[i].name);
-    }
-    printf("]\n");
-    printf("sub[lenSub-1].name: %d\n", sub[lenSub-1].name);*/
+
     double localtimer = timer;
 
     localtimer += getByTown(m, 0, sub[0].t.name) + sub[0].mTimeService;
-    if(!(localtimer >= sub[0].mTimeStart && localtimer <= sub[0].mTimeEnd && localtimer <= endTime)) {
-        // printf("H1111111111111111111111111111111111\n");
+    if(!(localtimer >= sub[0].mTimeStart && localtimer <= sub[0].mTimeEnd && localtimer <= endTime)) 
+    {
         return -1;
     }
 
     localtimer += getByTown(m, 0, sub[lenSub-1].t.name);
-    if(!(localtimer >= sub[lenSub-1].mTimeStart && localtimer <= sub[lenSub-1].mTimeEnd && localtimer <= endTime)) {
-        // printf("H22222222222222222222222222222222222\n");
+    if(!(localtimer >= sub[lenSub-1].mTimeStart && localtimer <= sub[lenSub-1].mTimeEnd && localtimer <= endTime)) 
+    {
         return -1;
     }
 
-    //double r = getByTown(m, 0, sub[0].t.name) + getByTown(m, 0, sub[lenSub-1].t.name);
-    //printf("@%lf %lf\n", getByTown(m, 0, sub[0].name), getByTown(m, 0, sub[lenSub-1].name));
-
     for(int i = 0; i < lenSub-1; i++)
     {
-        //printf("@%lf\n", getByTown(m, sub[i].name, sub[i+1].name));
-        //printf("sub[i+1].name: %d\n", sub[i+1].name);
         localtimer += getByTown(m, sub[i].t.name, sub[i+1].t.name) + sub[i+1].mTimeService;
-        // printf("localtimer: %lf\n", localtimer);
-        // printf("mTimeStart: %lf\n", sub[i].mTimeStart);
-        // printf("mTimeEnd: %lf\n", sub[i].mTimeEnd);
+        
         if(!(localtimer >= sub[i].mTimeStart && localtimer <= sub[i].mTimeEnd && localtimer <= endTime)) {
-            // printf("H3333333333333333333333333333333333333333333333333333333333\n");
             return -1;
         }
-        //r += getByTown(m, sub[i].t.name, sub[i+1].t.name);
     }
-    // printf("%lf -> %lf", localtimer, timer);
     return localtimer - timer;
 }
 
@@ -227,9 +207,6 @@ double lkh2optTw(twtown *sub, int lenSub, halfmatrix *m, double *timer, const do
     printf("\n--*--\nOld total time: %lf\n", best);
     printf("Old list: "); printTwTownList(subcopy, lenSub); putchar('\n');
 
-    // double localtimer = *timer;
-
-    // double runtime = clock();
 	for(int a = 0; a < lenSub; a++)
 	{
 		for(int b = a + 1; b < lenSub; b++)
@@ -305,9 +282,7 @@ double lkh3optTw(twtown *sub, int lenSub, halfmatrix *m, double *timer, const do
     printf("Old list: "); printTwTownList(subcopy, lenSub); putchar('\n');
 
     int mode;
-    // double localtimer = *timer;
 
-    // double runtime = clock(); 
     for(int a = 0; a < lenSub; a++) 
     {
         for(int b = a + 1; b < lenSub; b++) 
@@ -319,7 +294,6 @@ double lkh3optTw(twtown *sub, int lenSub, halfmatrix *m, double *timer, const do
                     case(1): {reverseTownTw(subcopy, a+1, b);break;}
                     case(2): {reverseTownTw(subcopy, b+1, lenSub-1);break;}
                     case(3): {moveElemsTw(subcopy, a+1, b, b+1,lenSub-1);break;}
-                    // case 4, 5, 6 - crash program: Segmentation Fault
                     case(4): {
                         
                         reverseTownTw(subcopy, 0, a);
@@ -447,8 +421,6 @@ double saTw(twtown *sub, int lenSub, halfmatrix *m, double* timer, const double 
     *timer += best;
     return best;
 }
-
-
 
 int read_file_tw(const char* name_file, twtown *towns, int counttowns)
 {
