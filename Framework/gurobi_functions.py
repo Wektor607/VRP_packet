@@ -2,6 +2,10 @@ import pandas as pd
 import requests
 
 def try_request(url):
+    """
+    Функция, повторно подающая http запрос для получения расстояния между двумя точками (между клиентами или между клиентом и депо) в случае возникновения ошибки. На вход подается 1 параметр:
+        :type string url: запрос для полученя расстояния между двумя точками.
+    """
     while(1):
         try:
             r = requests.get(url)
@@ -10,6 +14,12 @@ def try_request(url):
             print("ERROR")
             
 def distance_file(n, lst, lst_distance):
+    """
+    Функция, возвращающая файл с расстояниями между всеми городами, в том числе и депо. На вход подается три параметра:
+            :type int n: количество городов в неоптимизированном маршруте;
+            :type list lst: список с ссылками на файлы с задачами;
+            :type list lst_distance: список с ссылками на файлы с расстояними для каждой задачи;
+    """
     for i in range(len(lst)):
         file_name = lst[i]
         file_dist = lst_distance[i]

@@ -361,7 +361,6 @@ static PyObject *modelMetaHeuristic(PyObject *self, PyObject *args) {
       printf("Error algname: %s\n", algname);
       exit(-1);
    }
-
    return Py_BuildValue("f", "Hello, Python extensions!!");
 };
 

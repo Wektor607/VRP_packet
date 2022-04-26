@@ -204,8 +204,8 @@ double lkh2optTw(twtown *sub, int lenSub, halfmatrix *m, double *timer, const do
         return -1;
     }
 
-    printf("\n--*--\nOld total time: %lf\n", best);
-    printf("Old list: "); printTwTownList(subcopy, lenSub); putchar('\n');
+    // printf("\n--*--\nOld total time: %lf\n", best);
+    // printf("Old list: "); printTwTownList(subcopy, lenSub); putchar('\n');
 
 	for(int a = 0; a < lenSub; a++)
 	{
@@ -244,8 +244,8 @@ double lkh2optTw(twtown *sub, int lenSub, halfmatrix *m, double *timer, const do
 	}
     free(subcopy);
 
-	printf("New distance: %lf\n", best);
-	printf("New list: "); printTwTownList(sub, lenSub);
+	// printf("New distance: %lf\n", best);
+	// printf("New list: "); printTwTownList(sub, lenSub);
     if(best != -1) {
         *timer += best;  
     }
@@ -278,8 +278,8 @@ double lkh3optTw(twtown *sub, int lenSub, halfmatrix *m, double *timer, const do
         return -1;
     }
 
-    printf("\n--*--\nOld total time: %lf\n", best);
-    printf("Old list: "); printTwTownList(subcopy, lenSub); putchar('\n');
+    // printf("\n--*--\nOld total time: %lf\n", best);
+    // printf("Old list: "); printTwTownList(subcopy, lenSub); putchar('\n');
 
     int mode;
 
@@ -343,8 +343,8 @@ double lkh3optTw(twtown *sub, int lenSub, halfmatrix *m, double *timer, const do
     }
     free(subcopy);
     
-    printf("New total time: %lf\n", best);
-    printf("New list: "); printTwTownList(sub, lenSub);
+    // printf("New total time: %lf\n", best);
+    // printf("New list: "); printTwTownList(sub, lenSub);
     if(best != -1) {
         *timer += best;  
     }

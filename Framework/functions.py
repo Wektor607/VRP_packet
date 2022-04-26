@@ -60,7 +60,7 @@ class CVRP (VRP):
         """
         # для SA и LKH моей реализации
         print("Parse from CVRP")
-        # gur_f.distance_file(self.count_towns, [self.name_file], [self.name_file[ :self.name_file.rfind('.csv')] + '_dist.csv']) #TODO: сделать только для Gurobi
+        gur_f.distance_file(self.count_towns, [self.name_file], [self.name_file[ :self.name_file.rfind('.csv')] + '_dist.csv']) #TODO: сделать только для Gurobi
         vrp_c.parseOneTownPy(self.name_file, self.path_folder, self.count_towns)
    
     def sa(self, T: float = 1000, t_min: float = 10) -> [float, list]:
@@ -68,6 +68,10 @@ class CVRP (VRP):
         Функция, вызывающая алгоритм "Имитации отжига" для решения задачи CVRP. На вход подается два параметра:
             :type float T:     начальная температура, которая с течением времени убывает;
             :type float t_min: конечная температура, до которой опускается температура T.
+        По окончании работы создается файл с данными, состоящий из двух колонок:
+            1. В первом столбце записывается длина маршрута, выраженная в метрах, в определенный момент времени;
+            2. Во втором столбце записывается время, которое потребовалось, чтобы оптимизировать маршрут до некоторой длины.
+
         """ 
         vrp_c.modelMetaHeuristic("cvrp_sa", self.path_folder, self.count_towns, self.capacity, self.countTasks)
         return parse_dist_and_tour()
@@ -75,7 +79,10 @@ class CVRP (VRP):
     def lkh(self, name_opt: str = 'lkh3opt') -> [float, list]:
         """
         Функция, вызывающая алгоритм "Эвристика Лина-Кёрнигана" для решения задачи CVRP. На вход подается один параметр.
-            :type string name_opt: название метода оптимизации: 2-opt, 3-opt. 
+            :type string name_opt: название метода оптимизации: 2-opt, 3-opt.
+        По окончании работы создается файл с данными, состоящий из двух колонок:
+            1. В первом столбце записывается длина маршрута, выраженная в метрах, в определенный момент времени;
+            2. Во втором столбце записывается время, которое потребовалось, чтобы оптимизировать маршрут до некоторой длины. 
         """
         if(name_opt == 'lkh2opt'):
             vrp_c.modelMetaHeuristic("cvrp_lkh_2opt", self.path_folder, self.count_towns, self.capacity, self.countTasks)
@@ -84,6 +91,13 @@ class CVRP (VRP):
         return parse_dist_and_tour()
 
     def gurobi(self) -> [float, list]: #TODO: доделать для Gurobi
+        """
+        Функция, использующая коммерческий проект "Gurobi" для решения задачи CVRP.
+
+        По окончании работы создается файл с данными, состоящий из двух колонок:
+            1. В первом столбце записывается длина маршрута, выраженная в метрах, в определенный момент времени;
+            2. Во втором столбце записывается время, которое потребовалось, чтобы оптимизировать маршрут до некоторой длины.
+        """ 
         # Запишем все данные в виде массива списков
         data_file  = pd.read_csv(self.name_file, sep="\t", error_bad_lines=True)
         arr_data   = data_file.values
@@ -198,6 +212,7 @@ class CVRPTW (VRP):
         """
         # для SA и LKH моей реализации
         print("Parse from CVRPTW")
+        gur_f.distance_file(self.count_towns, [self.name_file], [self.name_file[ :self.name_file.rfind('.csv')] + '_dist.csv']) #TODO: сделать только для Gurobi
         vrp_c.parseOneTwTownPy(self.name_file, self.path_folder, self.count_towns)
 
     def sa(self, T: float = 1000, t_min: float = 10) -> [float, list]:
@@ -205,14 +220,20 @@ class CVRPTW (VRP):
         Функция, вызывающая алгоритм "Имитации отжига" для решения задачи CVRPTW. На вход подается два параметра:
             :type float T:     начальная температура, которая с течением времени убывает;
             :type float t_min: конечная температура, до которой опускается температура T.
+        По окончании работы создается файл с данными, состоящий из двух колонок:
+            1. В первом столбце записывается длина маршрута, выраженная в метрах, в определенный момент времени;
+            2. Во втором столбце записывается время, которое потребовалось, чтобы оптимизировать маршрут до некоторой длины.
         """ 
         vrp_c.modelMetaHeuristic("cvrptw_sa", self.path_folder, self.count_towns, self.capacity, self.countTasks)
         return parse_dist_and_tour()
     
     def lkh(self, name_opt: str = 'lkh3opt') -> [float, list]:
         """
-        Функция, вызывающая алгоритм "Эвристика Лина-Кёрнигана" для решения задачи CVRP. На вход подается один параметр.
+        Функция, вызывающая алгоритм "Эвристика Лина-Кёрнигана" для решения задачи CVRPTW. На вход подается один параметр.
             :type string name_opt: название метода оптимизации: 2-opt, 3-opt.
+        По окончании работы создается файл с данными, состоящий из двух колонок:
+            1. В первом столбце записывается длина маршрута, выраженная в метрах, в определенный момент времени;
+            2. Во втором столбце записывается время, которое потребовалось, чтобы оптимизировать маршрут до некоторой длины.
         """
         if(name_opt == 'lkh2opt'):
             vrp_c.modelMetaHeuristic("cvrptw_lkh_2opt", self.path_folder, self.count_towns, self.capacity, self.countTasks)
@@ -221,6 +242,13 @@ class CVRPTW (VRP):
         return parse_dist_and_tour()
     
     def gurobi(self) -> [float, list]:
+        """
+        Функция, использующая коммерческий проект "Gurobi" для решения задачи CVRPTW.
+        
+        По окончании работы создается файл с данными, состоящий из двух колонок:
+            1. В первом столбце записывается длина маршрута, выраженная в метрах, в определенный момент времени;
+            2. Во втором столбце записывается время, которое потребовалось, чтобы оптимизировать маршрут до некоторой длины.
+        """ 
         data_file    = pd.read_csv(self.name_file, sep="\t", error_bad_lines=True)
 
         # Запишем все данные в виде массива списков, где каждый список это строка с значениями конкретных столбцов
