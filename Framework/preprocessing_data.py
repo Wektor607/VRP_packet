@@ -7,7 +7,10 @@ from main import *
 import os
 
 def preprocess(task):
-
+    """
+    Функция, обрабатывающая наборы в зависимости от решаемой задачи CVRP или CVRPTW. Подается 1 аргумент:
+        :type string task: название решаемой задачи CVRP или CVRP-TW
+    """
     if(task == 'CVRPTW'):
         for i in range(len(lst)):
             file_name = lst[i]

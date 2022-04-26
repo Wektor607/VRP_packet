@@ -1,4 +1,4 @@
-from sklearn import preprocessing
+from preprocessing_data import *
 from functions import *
 from collections import deque
 from datetime import datetime
@@ -129,13 +129,13 @@ def main():
                     iteretions = 700
                 elif(count_towns == 51):
                     max_capacity = 750
-                    iteretions = 1250
+                    iteretions = 500
                 elif(count_towns == 101):
                     max_capacity = 1000
-                    iteretions = 2500
+                    iteretions = 300
                 start = (int(last_line[0].split(':')[0]) + int(last_line[0].split(':')[1])) * 60
                 end   = (int(last_line[1].split(':')[0]) + int(last_line[1].split(':')[1])) * 60
-                a = CVRPTW(i, f"20_tw/test{idx}", count_towns, iteretions, max_capacity, start, end) #TODO: некоторые параметры брать автоматически из файла
+                a = CVRPTW(i, f"cvrptw/test{idx}", count_towns, iteretions, max_capacity, start, end) #TODO: некоторые параметры брать автоматически из файла
                 idx += 1
                 print(a.sa())
                 with open(f'SA_CVRPTW_result.txt', 'r') as res_file:
@@ -162,13 +162,13 @@ def main():
                     iteretions = 700
                 elif(count_towns == 51):
                     max_capacity = 750
-                    iteretions = 1250
+                    iteretions = 500
                 elif(count_towns == 101):
                     max_capacity = 1000
                     iteretions = 300
                 start = (int(last_line[0].split(':')[0]) + int(last_line[0].split(':')[1])) * 60
                 end   = (int(last_line[1].split(':')[0]) + int(last_line[1].split(':')[1])) * 60
-                a = CVRPTW(i, f"100_tw/test{idx}", count_towns, iteretions, max_capacity, start, end) #TODO: некоторые параметры брать автоматически из файла
+                a = CVRPTW(i, f"cvrptwtw/test{idx}", count_towns, iteretions, max_capacity, start, end) #TODO: некоторые параметры брать автоматически из файла
                 idx += 1
                 print(a.lkh(name_opt))
                 with open(f'LKH_{name_opt[3:]}_CVRPTW_result.txt', 'r') as res_file:
@@ -184,11 +184,11 @@ def main():
                     iteretions = 700
                 elif(count_towns == 51):
                     max_capacity = 750
-                    iteretions = 1250
+                    iteretions = 500
                 elif(count_towns == 101):
                     max_capacity = 1000
-                    iteretions = 2500
-                a = CVRPTW(i, f"50_tw/test{idx}", count_towns, iteretions, max_capacity) #TODO: некоторые параметры брать автоматически из файла
+                    iteretions = 300
+                a = CVRPTW(i, f"cvrptw/test{idx}", count_towns, iteretions, max_capacity) #TODO: некоторые параметры брать автоматически из файла
                 idx += 1
                 print(a.gurobi())
             p = count_towns - 1
