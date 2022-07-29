@@ -70,7 +70,6 @@ namespace operations_research
       }
       solver->MakeRowConstraint(constraint3 == 1);
     }
-    std::cout<< "I'm HEAR 3" << std::endl;
 
     //4
     const double infinity = solver->infinity();
