@@ -13,8 +13,7 @@ namespace operations_research
       LOG(WARNING) << "SCIP solver unavailable.";
       return;
     }
-
-    // x and y are non-negative variables.
+    
     std::vector<std::vector<std::vector<const MPVariable*>>> x(p, std::vector<std::vector<const MPVariable*>>(N+1, std::vector<const MPVariable*>(N+1, 0)));
     for (int k = 0; k < p; k++)
     {
@@ -26,7 +25,6 @@ namespace operations_research
         }
       }
     }
-    std::cout<< "I'm HEAR 1" << std::endl;
 
     //2.1
     for(int j = 1; j < N+1; j++)
@@ -61,7 +59,6 @@ namespace operations_research
       }
       solver->MakeRowConstraint(constraint2_2 == 1);
     }
-    std::cout<< "I'm HEAR 2" << std::endl;
 
     //3
     for(int k = 0; k < p; k++)
@@ -173,7 +170,6 @@ namespace operations_research
     }
     objective->SetMinimization();
 
-    std::cout<< "I'm HEAR 4" << std::endl;
     const MPSolver::ResultStatus result_status = solver->Solve();
     if (result_status != MPSolver::OPTIMAL) 
     {
@@ -195,7 +191,6 @@ namespace operations_research
         }
       }
     }
-    std::cout<< "I'm HEAR 5" << std::endl;
   }
 } // namespace operations_research
 
