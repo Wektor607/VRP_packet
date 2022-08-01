@@ -27,7 +27,7 @@ namespace operations_research
         }
         return subarr;
     }
-    void LinearProgrammingExample(int N, int p, const std::vector<std::vector<int>> &dist_arr, std::string solver_name)
+    void LinearProgrammingExample(int N, int p, const std::vector<std::vector<double>> &dist_arr, std::string solver_name)
     {
         std::unique_ptr<MPSolver> solver(MPSolver::CreateSolver(solver_name));
         if (!solver)
@@ -36,18 +36,18 @@ namespace operations_research
             return;
         }
 
-        std::vector<std::vector<std::vector<const MPVariable *>>> x(p, std::vector<std::vector<const MPVariable *>>(N + 1, std::vector<const MPVariable *>(N + 1, 0)));
+        std::vector<std::vector<std::vector<const MPVariable*>>> x(p, std::vector<std::vector<const MPVariable*>>(N + 1, std::vector<const MPVariable*>(N + 1)));
+        
         for (int k = 0; k < p; k++)
         {
             for (int i = 0; i < N + 1; i++)
             {
                 for (int j = 0; j < N + 1; j++)
                 {
-                    x[k][i][j] = solver->MakeIntVar(0.0, 1.0, "");
+                    x[k][i][j] = solver->MakeIntVar(0, 1, "");
                 }
             }
         }
-        std::cout << "I'm HEAR 1" << std::endl;
 
         // 2
         for (int j = 1; j < N + 1; j++)
@@ -66,8 +66,6 @@ namespace operations_research
             solver->MakeRowConstraint(constraint2_1 == 1);
         }
 
-        std::cout << "I'm HEAR 2" << std::endl;
-
         // 3
         for (int k = 0; k < p; k++)
         {
@@ -78,7 +76,6 @@ namespace operations_research
             }
             solver->MakeRowConstraint(constraint3 == 1);
         }
-        std::cout << "I'm HEAR 3" << std::endl;
 
         // 4
         for (int k = 0; k < p; k++)
@@ -116,8 +113,7 @@ namespace operations_research
         std::vector<int> sub;
         int index = 0;
 
-        subs = printSubsequences(arr, index, subs, p, sub);
-
+        subs = printSubsequences(arr, index, subs, N, sub);
         for (int S = 0; S < subs.size(); S++)
         {
             LinearExpr constraint6;
@@ -134,7 +130,7 @@ namespace operations_research
                     }
                 }
             }
-            solver->MakeRowConstraint(constraint6 <= subs[S].size() - 1);
+            solver->MakeRowConstraint(constraint6 <= (subs[S].size() - 1));
         }
 
         // Minimize function
@@ -178,16 +174,15 @@ namespace operations_research
                 }
             }
         }
-        std::cout << "I'm HEAR 5" << std::endl;
     }
 } // namespace operations_research
 
 int main(int argc, char **argv)
 {
     int N = 20;
-    int p = 8;
+    int p = 6;
     std::string solver_name = "SCIP";
-    std::vector<std::vector<int>> dist_arr(N + 1, std::vector<int>(N + 1, 0));
+    std::vector<std::vector<double>> dist_arr(N + 1, std::vector<double>(N + 1, 0));
 
     std::random_device device;
     std::mt19937 generator(device());
