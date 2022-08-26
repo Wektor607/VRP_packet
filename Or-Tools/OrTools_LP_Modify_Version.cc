@@ -2,13 +2,111 @@
 #include <random>
 #include <algorithm>
 #include <ctime>
+#include <cmath>
+#include <fstream>
 #include "ortools/linear_solver/linear_solver.h"
 
 namespace operations_research
 {
-    void LinearProgrammingExample(int N, int p, int Q, const std::vector<int> &d, 
-    const std::vector<std::vector<double>> &new_matrix, std::string solver_name, std::vector<int> &del_point)
+    void LinearProgrammingExample(int N, int p, int Q, std::string solver_name)
     {
+        unsigned int start_time = clock();
+        
+        std::random_device device;
+        std::mt19937 generator(device());
+        
+        // Генерация весов клиентов
+        std::uniform_real_distribution<double> cap(1, 42);
+        std::vector<int> d(N+1, 0);
+        std::vector<int> del_point;
+        for(int i = 1; i < N+1; i++)
+        {
+            d[i] = cap(generator);
+            if(d[i] > Q)
+            {
+                d[i] = 0;
+                del_point.push_back(i);
+            }
+        }
+        
+        // Генерация координат расположения клиентов + депо
+        std::vector<double> x_coord(N + 1, 0);
+        std::vector<double> y_coord(N + 1, 0);
+        std::uniform_real_distribution<double> coord(1, 100);
+        for(int i = 0; i < N+1; i++)
+        {
+            x_coord[i] = coord(generator);
+            y_coord[i] = coord(generator);
+        }
+        
+        // Вычисление расстояния между всеми точками
+        std::vector<std::vector<double>> dist_arr(N + 1, std::vector<double>(N + 1, 0));
+        for (int i = 0; i < N + 1; i++)
+        {
+            for (int j = 0; j < N + 1; j++)
+            {
+                if (i != j)
+                {
+                    dist_arr[i][j] = sqrt(pow(x_coord[i] - x_coord[j], 2) + pow(y_coord[i] - y_coord[j], 2));
+                    dist_arr[j][i] = dist_arr[i][j];
+                }
+            }
+        }
+        
+        // Проверка достижимости через неравенство треугольника
+        for (int i = 0; i < N + 1; i++)
+        {
+            for (int j = 0; j < N + 1; j++)
+            {
+                for(int k = 0; k < N + 1; k++)
+                {
+                    if(i != j && i != k && j != k)
+                    {
+                        while(1)
+                        {
+                            if(dist_arr[i][j] + dist_arr[j][k] >= dist_arr[i][k])
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                x_coord[i] = coord(generator);
+                                y_coord[i] = coord(generator);
+                                dist_arr[i][j] = sqrt(pow(x_coord[i] - x_coord[j], 2) + pow(y_coord[i] - y_coord[j], 2));
+                                dist_arr[j][i] = dist_arr[i][j];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Запись итоговых координат в файл
+        std::ofstream file_coords("coords.txt", std::ios_base::out | std::ios_base::trunc);
+        for(int i = 0; i < N+1; i++)
+        {
+            file_coords << x_coord[i] << " " << y_coord[i] << std::endl;
+        }
+        file_coords.close();
+        
+        //Вычисление расстояний по обновленной формуле из статьи
+        std::vector<std::vector<double>> new_matrix(N + 1, std::vector<double>(N + 1, 0));
+        for (int i = 1; i < N + 1; i++)
+        {
+            if(std::find(del_point.begin(), del_point.end(), i) == del_point.end())
+            {
+                for (int j = 1; j < N + 1; j++)
+                {
+                    if (i != j && std::find(del_point.begin(), del_point.end(), j) == del_point.end())
+                    {
+                        new_matrix[i][j] = dist_arr[i][0] + dist_arr[0][j] - dist_arr[i][j];
+                        new_matrix[j][i] = new_matrix[i][j];
+                    }
+                }
+            }
+        }
+
+        // Создание модели
         std::unique_ptr<MPSolver> solver(MPSolver::CreateSolver(solver_name));
         if (!solver)
         {
@@ -141,14 +239,7 @@ namespace operations_research
         }
         objective->SetMaximization();
 
-        // std::cout << "СЧЁТЧИК1: " << count1 << std::endl;
-        // std::cout << "СЧЁТЧИК2: " << count2 << std::endl;
-        // std::cout << "СЧЁТЧИК3: " << count3 << std::endl;
-        // std::cout << "СЧЁТЧИК4: " << count4 << std::endl;
-        // std::cout << "СЧЁТЧИК5: " << count5 << std::endl;
-        // std::cout << "СЧЁТЧИК6: " << count6 << std::endl;
-        // std::cout << "СЧЁТЧИК7: " << count7 << std::endl;
-        // std::cout << "СЧЁТЧИК8: " << count8 << std::endl;
+        // Печать и запись в файл решения
         const MPSolver::ResultStatus result_status = solver->Solve();
         if (result_status != MPSolver::OPTIMAL)
         {
@@ -156,6 +247,9 @@ namespace operations_research
         }
         LOG(INFO) << "Solution:";
         LOG(INFO) << "Optimal objective value = " << objective->Value();
+
+        std::ofstream file_res("result.txt", std::ios_base::out | std::ios_base::trunc);
+
         for (int i = 0; i < N + 1; i++)
         {
             if(std::find(del_point.begin(), del_point.end(), i) == del_point.end())
@@ -164,109 +258,17 @@ namespace operations_research
                 {
                     if (x[i][j]->solution_value() > 0.9 && std::find(del_point.begin(), del_point.end(), j) == del_point.end())
                     {
+                        file_res << i << " " << j << std::endl;
                         LOG(INFO) << "x[" << i << "]"
                                 << "["  << j << "] = " << x[i][j]->solution_value();
                     }
                 }
             }
         }
-    }
-} // namespace operations_research
+        file_res.close();
+        unsigned int end_time = clock();
+        unsigned int search_time = end_time - start_time;
+        std::cout << "Время работы: " << search_time / 1000000.0 << "секунд" << std::endl;
 
-// 
-// 10: -10   max_capacity = 20
-// 20: -20   max_capacity = 30
-// 50: -50   max_capacity = 40
-// 100: -100 max_capacity = 50
-// 250: -250
-// 1000: -1000
-// 2500: -2500
-int main(int argc, char **argv)
-{
-    int N = 10;
-    int p = 5;
-    int max_capacity = 20;
-    std::string solver_name = "SCIP";
-    std::random_device device;
-    std::mt19937 generator(device());
-    
-    std::uniform_real_distribution<double> cap(1, 42);
-    std::vector<int> capacity(N+1, 0);
-    std::vector<int> del_point;
-    for(int i = 1; i < N+1; i++)
-    {
-        capacity[i] = cap(generator);
-        if(capacity[i] > max_capacity)
-        {
-            capacity[i] = 0;
-            del_point.push_back(i);
-        }
     }
-    
-    std::vector<std::vector<double>> dist_arr(N + 1, std::vector<double>(N + 1, 0));
-    std::uniform_real_distribution<double> distr(1, 100);
-    for (int i = 0; i < N + 1; i++)
-    {
-        for (int j = 0; j < N + 1; j++)
-        {
-            if (i != j)
-            {
-                dist_arr[i][j] = distr(generator);
-                dist_arr[j][i] = dist_arr[i][j];
-            }
-        }
-    }
-    
-    for (int i = 0; i < N + 1; i++)
-    {
-        for (int j = 0; j < N + 1; j++)
-        {
-            for(int k = 0; k < N + 1; k++)
-            {
-                if(i != j && i != k && j != k)
-                {
-                    while(1)
-                    {
-                        if(dist_arr[i][j] + dist_arr[j][k] >= dist_arr[i][k])
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            dist_arr[i][j] = distr(generator);
-                            dist_arr[j][i] = dist_arr[i][j];
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    std::vector<std::vector<double>> new_matrix(N + 1, std::vector<double>(N + 1, 0));
-    for (int i = 1; i < N + 1; i++)
-    {
-        if(std::find(del_point.begin(), del_point.end(), i) == del_point.end())
-        {
-            for (int j = 1; j < N + 1; j++)
-            {
-                if (i != j && std::find(del_point.begin(), del_point.end(), j) == del_point.end())
-                {
-                    new_matrix[i][j] = dist_arr[i][0] + dist_arr[0][j] - dist_arr[i][j];
-                    new_matrix[j][i] = new_matrix[i][j];
-                }
-            }
-        }
-    }
-
-    std::cout << "I'm READY" << std::endl;
-    unsigned int start_time = clock();
-    operations_research::LinearProgrammingExample(N, p, max_capacity, capacity, new_matrix, solver_name, del_point);
-    unsigned int end_time = clock();
-    unsigned int search_time = end_time - start_time;
-    std::cout << "Время работы: " << search_time / 1000000.0 << "секунд" << std::endl;
-    for (int i = 0; i < N + 1; i++)
-    {
-        std::cout << capacity[i] << " ";
-    }
-    return EXIT_SUCCESS;
 }
