@@ -27,7 +27,4 @@ class CVRP (LP_OrTools):
    
     def LP_OrTools(self):
         vrp_c.modelMetaHeuristic(self.N, self.p, self.Q, self.solver_name)
-        print("YES")
-        return 0
-  
-    
+        return "The END"
